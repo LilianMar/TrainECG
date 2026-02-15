@@ -1,11 +1,24 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, User, Mail, GraduationCap, Calendar, Edit, Settings } from "lucide-react";
+import { ArrowLeft, User, Mail, GraduationCap, Calendar, Edit, Settings, MapPin, TrendingUp, Activity as ActivityIcon, Award } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest } from "@/lib/api";
+
+interface UserStats {
+  total_ecgs: number;
+  avg_accuracy: number;
+  consecutive_days: number;
+  rank: string;
+}
+
+interface Activity {
+  date: string;
+  activity: string;
+  score: string;
+}
 
 const Profile = () => {
   const [userProfile, setUserProfile] = useState<{
@@ -14,10 +27,18 @@ const Profile = () => {
     userType: string;
     institution?: string | null;
     joinDate: string;
-    location: string;
-    specialization: string;
     avatar: string;
   } | null>(null);
+
+  const [stats, setStats] = useState<UserStats>({
+    total_ecgs: 0,
+    avg_accuracy: 0,
+    consecutive_days: 0,
+    rank: "Principiante"
+  });
+
+  const [recentActivity, setRecentActivity] = useState<Activity[]>([]);
+  const [location, setLocation] = useState<string>("No disponible");
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -42,8 +63,6 @@ const Profile = () => {
           userType: response.user_type,
           institution: response.institution ?? "",
           joinDate,
-          location: "",
-          specialization: "",
           avatar: "/api/placeholder/120/120",
         });
       } catch {
@@ -51,39 +70,70 @@ const Profile = () => {
       }
     };
 
+    const loadStats = async () => {
+      try {
+        const response = await apiRequest<UserStats>("/users/me/stats");
+        setStats(response);
+      } catch (error) {
+        console.error("Error loading stats:", error);
+      }
+    };
+
+    const loadActivity = async () => {
+      try {
+        const response = await apiRequest<{ activities: Activity[] }>("/users/me/activity");
+        setRecentActivity(response.activities);
+      } catch (error) {
+        console.error("Error loading activity:", error);
+      }
+    };
+
+    const detectLocation = () => {
+      // Try to get location from browser's language/timezone
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      
+      // Simple mapping of timezones to locations
+      if (timezone.includes("Bogota")) {
+        setLocation("Colombia");
+      } else if (timezone.includes("America")) {
+        const country = timezone.split("/")[1]?.replace(/_/g, " ");
+        setLocation(country || "América");
+      } else {
+        setLocation(timezone.split("/")[0] || "No disponible");
+      }
+    };
+
     loadProfile();
+    loadStats();
+    loadActivity();
+    detectLocation();
   }, []);
 
-  const stats = [
-    { label: "ECGs Analizados", value: "124", color: "text-primary" },
-    { label: "Precisión Promedio", value: "87%", color: "text-success" },
-    { label: "Días Consecutivos", value: "12", color: "text-warning" },
-    { label: "Rango Actual", value: "Avanzado", color: "text-foreground" }
-  ];
-
-  const recentActivity = [
-    {
-      date: "Hoy",
-      activity: "Completó práctica de Fibrilación Auricular",
-      score: "9/10 correctas"
+  const statsDisplay = [
+    { 
+      label: "ECGs Analizados", 
+      value: stats.total_ecgs.toString(), 
+      color: "text-primary",
+      icon: ActivityIcon
     },
-    {
-      date: "Ayer",
-      activity: "Analizó 5 ECGs con IA",
-      score: "85% precisión"
+    { 
+      label: "Precisión Promedio", 
+      value: `${stats.avg_accuracy}%`, 
+      color: "text-success",
+      icon: TrendingUp
     },
-    {
-      date: "2 días",
-      activity: "Completó módulo de Taquicardias",
-      score: "Certificado obtenido"
+    { 
+      label: "Días Consecutivos", 
+      value: stats.consecutive_days.toString(), 
+      color: "text-warning",
+      icon: Calendar
+    },
+    { 
+      label: "Rango Actual", 
+      value: stats.rank, 
+      color: "text-foreground",
+      icon: Award
     }
-  ];
-
-  const preferences = [
-    { setting: "Notificaciones diarias", enabled: true },
-    { setting: "Recordatorios de práctica", enabled: true },
-    { setting: "Informes semanales", enabled: false },
-    { setting: "Modo oscuro", enabled: false }
   ];
 
   return (
@@ -144,7 +194,7 @@ const Profile = () => {
                       
                       <div className="flex items-center space-x-2">
                         <GraduationCap className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-sm">{userProfile?.institution || ""}</span>
+                        <span className="text-sm">{userProfile?.institution || "No especificado"}</span>
                       </div>
                       
                       <div className="flex items-center space-x-2">
@@ -153,8 +203,8 @@ const Profile = () => {
                       </div>
                       
                       <div className="flex items-center space-x-2">
-                        <User className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-sm">{userProfile?.specialization || ""}</span>
+                        <MapPin className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm">{location}</span>
                       </div>
                     </div>
                   </div>
@@ -165,13 +215,19 @@ const Profile = () => {
             {/* Statistics */}
             <Card className="medical-card">
               <CardHeader>
-                <CardTitle>Estadísticas de Rendimiento</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5" />
+                  Estadísticas de Rendimiento
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                  {stats.map((stat, index) => (
-                    <div key={index} className="text-center">
-                      <div className={`text-2xl font-bold ${stat.color} mb-1`}>
+                  {statsDisplay.map((stat, index) => (
+                    <div key={index} className="text-center space-y-2">
+                      <div className="flex justify-center">
+                        <stat.icon className={`w-6 h-6 ${stat.color}`} />
+                      </div>
+                      <div className={`text-2xl font-bold ${stat.color}`}>
                         {stat.value}
                       </div>
                       <div className="text-sm text-muted-foreground">
@@ -186,22 +242,33 @@ const Profile = () => {
             {/* Recent Activity */}
             <Card className="medical-card">
               <CardHeader>
-                <CardTitle>Actividad Reciente</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <ActivityIcon className="w-5 h-5" />
+                  Actividad Reciente
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {recentActivity.map((activity, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 border border-border rounded-lg">
-                      <div>
-                        <p className="font-medium text-sm">{activity.activity}</p>
-                        <p className="text-xs text-muted-foreground">{activity.date}</p>
+                {recentActivity.length > 0 ? (
+                  <div className="space-y-4">
+                    {recentActivity.map((activity, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors">
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{activity.activity}</p>
+                          <p className="text-xs text-muted-foreground">{activity.date}</p>
+                        </div>
+                        <Badge variant="outline" className="text-xs">
+                          {activity.score}
+                        </Badge>
                       </div>
-                      <Badge variant="outline" className="text-xs">
-                        {activity.score}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <ActivityIcon className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                    <p>No hay actividad reciente</p>
+                    <p className="text-sm mt-1">¡Comienza a usar la aplicación!</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -215,20 +282,26 @@ const Profile = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-warning mb-2">12</div>
-                  <p className="text-sm text-muted-foreground mb-4">días consecutivos</p>
+                  <div className="text-4xl font-bold text-warning mb-2">
+                    {stats.consecutive_days}
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {stats.consecutive_days === 1 ? "día consecutivo" : "días consecutivos"}
+                  </p>
                   <div className="flex justify-center space-x-1 mb-4">
                     {Array.from({length: 7}, (_, i) => (
                       <div
                         key={i}
-                        className={`w-4 h-4 rounded-full ${
-                          i < 5 ? 'bg-warning' : 'bg-muted'
+                        className={`w-4 h-4 rounded-full transition-colors ${
+                          i < Math.min(stats.consecutive_days, 7) ? 'bg-warning' : 'bg-muted'
                         }`}
                       />
                     ))}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    ¡Sigue así para mantener tu racha!
+                    {stats.consecutive_days > 0 
+                      ? "¡Sigue así para mantener tu racha!" 
+                      : "¡Comienza tu racha de aprendizaje hoy!"}
                   </p>
                 </div>
               </CardContent>
@@ -240,43 +313,26 @@ const Profile = () => {
                 <CardTitle className="text-lg">Acciones Rápidas</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button variant="outline" className="w-full justify-start">
-                  <Settings className="w-4 h-4 mr-2" />
-                  Configuración
-                </Button>
+                <Link to="/classify" className="block">
+                  <Button variant="outline" className="w-full justify-start">
+                    <ActivityIcon className="w-4 h-4 mr-2" />
+                    Analizar ECG
+                  </Button>
+                </Link>
                 
-                <Button variant="outline" className="w-full justify-start">
-                  <User className="w-4 h-4 mr-2" />
-                  Cambiar Avatar
-                </Button>
+                <Link to="/practice" className="block">
+                  <Button variant="outline" className="w-full justify-start">
+                    <GraduationCap className="w-4 h-4 mr-2" />
+                    Modo Práctica
+                  </Button>
+                </Link>
                 
-                <Button variant="outline" className="w-full justify-start">
-                  <Mail className="w-4 h-4 mr-2" />
-                  Preferencias de Email
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Preferences */}
-            <Card className="medical-card">
-              <CardHeader>
-                <CardTitle className="text-lg">Preferencias</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {preferences.map((pref, index) => (
-                    <div key={index} className="flex items-center justify-between">
-                      <span className="text-sm text-foreground">{pref.setting}</span>
-                      <div className={`w-10 h-6 rounded-full transition-colors ${
-                        pref.enabled ? 'bg-primary' : 'bg-muted'
-                      } relative cursor-pointer`}>
-                        <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform absolute top-1 ${
-                          pref.enabled ? 'translate-x-5' : 'translate-x-1'
-                        }`} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <Link to="/progress" className="block">
+                  <Button variant="outline" className="w-full justify-start">
+                    <TrendingUp className="w-4 h-4 mr-2" />
+                    Ver Progreso
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
 
@@ -286,17 +342,23 @@ const Profile = () => {
                 <CardTitle className="text-lg">Información de Cuenta</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Plan:</span>
-                  <span className="font-medium">Gratuito</span>
+                  <Badge variant="secondary">Gratuito</Badge>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Ubicación:</span>
-                  <span className="font-medium">{userProfile?.location || ""}</span>
+                  <span className="font-medium">{location}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Última actividad:</span>
-                  <span className="font-medium">Hoy</span>
+                  <span className="font-medium">
+                    {recentActivity.length > 0 ? recentActivity[0].date : "Sin actividad"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Rango:</span>
+                  <Badge variant="outline">{stats.rank}</Badge>
                 </div>
               </CardContent>
             </Card>

@@ -62,6 +62,13 @@ async def register(
         )
     except HTTPException:
         raise
+    except ValueError as e:
+        # Handle user already exists error from UserService
+        logger.error(f"Registration error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e)
+        )
     except Exception as e:
         logger.error(f"Registration error: {str(e)}")
         raise HTTPException(

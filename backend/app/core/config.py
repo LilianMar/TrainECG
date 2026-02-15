@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS: List[str] = [
         "http://localhost:3000",
         "http://localhost:8080",
+        "http://localhost:9000",
     ]
 
     # === LLM ===
@@ -40,7 +41,7 @@ class Settings(BaseSettings):
     LLM_TEMPERATURE: float = 0.7
 
     # === ML MODEL ===
-    MODEL_PATH: str = "./models/best_model_CNN_LSTM_Attention.h5"
+    MODEL_PATH: str = "./models/best_model_CNN_Mejorada_Usuario.h5"
     IMAGE_SIZE: int = 128
     WINDOW_SIZE: int = 128
     WINDOW_OVERLAP: float = 0.5

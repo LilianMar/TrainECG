@@ -32,7 +32,11 @@ class ModelManager:
         """Load Keras model from file."""
         try:
             import tensorflow as tf
-            self._model = tf.keras.models.load_model(settings.MODEL_PATH)
+            # Load with compile=False to avoid compatibility issues
+            self._model = tf.keras.models.load_model(
+                settings.MODEL_PATH,
+                compile=False
+            )
             logger.info(f"Model loaded successfully from {settings.MODEL_PATH}")
         except Exception as e:
             logger.error(f"Failed to load model: {str(e)}")

@@ -58,3 +58,17 @@ logger = logging.getLogger("app")
 def get_logger(name: str = "app") -> logging.Logger:
     """Get a logger instance."""
     return logging.getLogger(name)
+
+
+def ensure_logs_directory():
+    """Ensure logs directory exists."""
+    logs_dir = Path("./logs")
+    logs_dir.mkdir(exist_ok=True, parents=True)
+    logger.info(f"Logs directory ensured at {logs_dir.absolute()}")
+
+
+def ensure_upload_directory():
+    """Ensure uploads directory exists."""
+    uploads_dir = Path("./uploads")
+    uploads_dir.mkdir(exist_ok=True, parents=True)
+    logger.info(f"Uploads directory ensured at {uploads_dir.absolute()}")

@@ -8,6 +8,7 @@ __pycache__/
 *.pyd
 *.sqlite
 *.db
+*.db-journal
 .env
 .venv/
 venv/
@@ -23,6 +24,12 @@ yarn-error.log*
 # Build artifacts
 *.log
 coverage/
+
+# Reports
+ROUTES_REPORT.md
+
+# Documentation (internal)
+backend/docs/
 
 # IDE
 .vscode/
