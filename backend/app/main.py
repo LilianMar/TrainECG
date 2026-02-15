@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from app.core.config import get_settings
 from app.database import engine, Base
-from app.routes import auth, users, health
+from app.routes import auth, users, health, ecg, practice, progress
 from app.middleware.cors import setup_cors_middleware
 from app.middleware.logging import setup_logging_middleware
 from app.utils.logger import get_logger, ensure_upload_directory, ensure_logs_directory
@@ -81,10 +81,9 @@ def create_app() -> FastAPI:
     app.include_router(health.router)
     app.include_router(auth.router)
     app.include_router(users.router)
-    # Additional routes will be included here
-    # app.include_router(ecg.router)
-    # app.include_router(practice.router)
-    # app.include_router(progress.router)
+    app.include_router(ecg.router)
+    app.include_router(practice.router)
+    app.include_router(progress.router)
 
     logger.info("FastAPI application created successfully")
     return app
