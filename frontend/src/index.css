@@ -1,0 +1,207 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* TrainECG Medical Design System - Logo Inspired Palette - All colors MUST be HSL */
+
+@layer base {
+  :root {
+    /* Base colors */
+    --background: 0 0% 100%;
+    --foreground: 213 31% 25%;
+
+    /* Card colors - soft background with subtle teal hints */
+    --card: 0 0% 100%;
+    --card-foreground: 213 31% 25%;
+
+    /* Popover colors */
+    --popover: 0 0% 100%;
+    --popover-foreground: 213 31% 25%;
+
+    /* Navy Blue Primary - From logo deep blue */
+    --primary: 213 50% 25%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 213 50% 20%;
+
+    /* Teal Secondary - From logo teal accent */
+    --secondary: 173 60% 95%;
+    --secondary-foreground: 213 31% 25%;
+
+    /* Muted colors with teal hints */
+    --muted: 173 30% 96%;
+    --muted-foreground: 213 20% 50%;
+
+    /* Teal Accent - From logo bright teal */
+    --accent: 173 60% 88%;
+    --accent-foreground: 213 31% 25%;
+
+    /* Medical Alert Red */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Border and input with subtle teal */
+    --border: 173 20% 90%;
+    --input: 173 20% 90%;
+    --ring: 173 80% 50%;
+
+    /* Vibrant Teal Success - From logo */
+    --success: 173 80% 50%;
+    --success-foreground: 0 0% 100%;
+
+    /* Medical Warning Orange */
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    /* Logo-inspired gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(213 50% 25%), hsl(173 80% 50%));
+    --gradient-secondary: linear-gradient(135deg, hsl(173 60% 95%), hsl(173 30% 96%));
+    --gradient-hero: linear-gradient(135deg, hsl(213 50% 25%), hsl(173 70% 40%));
+    --gradient-card: linear-gradient(135deg, hsl(0 0% 100%), hsl(173 30% 98%));
+    --gradient-teal: linear-gradient(135deg, hsl(173 80% 50%), hsl(173 70% 60%));
+
+    /* Enhanced shadows with teal hints */
+    --shadow-medical: 0 4px 20px hsl(173 80% 50% / 0.15);
+    --shadow-card: 0 2px 10px hsl(213 31% 25% / 0.08);
+    --shadow-elevated: 0 8px 30px hsl(213 31% 25% / 0.12);
+    --shadow-teal: 0 4px 20px hsl(173 80% 50% / 0.20);
+
+    --radius: 0.5rem;
+
+    /* Animation transitions */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+
+  .dark {
+    /* Base colors - darker navy */
+    --background: 213 31% 8%;
+    --foreground: 173 30% 95%;
+
+    /* Card colors - dark navy with subtle teal */
+    --card: 213 31% 12%;
+    --card-foreground: 173 30% 95%;
+
+    /* Popover colors */
+    --popover: 213 31% 12%;
+    --popover-foreground: 173 30% 95%;
+
+    /* Teal Primary - brighter for dark mode */
+    --primary: 173 80% 55%;
+    --primary-foreground: 213 31% 8%;
+    --primary-hover: 173 80% 50%;
+
+    /* Secondary for dark mode */
+    --secondary: 213 31% 18%;
+    --secondary-foreground: 173 30% 95%;
+
+    /* Muted colors */
+    --muted: 213 31% 18%;
+    --muted-foreground: 173 20% 70%;
+
+    /* Accent colors */
+    --accent: 213 31% 18%;
+    --accent-foreground: 173 30% 95%;
+
+    /* Medical Alert Red */
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 173 30% 95%;
+
+    /* Border and input */
+    --border: 213 31% 18%;
+    --input: 213 31% 18%;
+    --ring: 173 80% 55%;
+
+    /* Vibrant Teal Success */
+    --success: 173 70% 50%;
+    --success-foreground: 0 0% 100%;
+
+    /* Medical Warning Orange */
+    --warning: 38 85% 55%;
+    --warning-foreground: 0 0% 100%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /* Medical app specific styles */
+  .medical-gradient {
+    background: var(--gradient-primary);
+  }
+
+  .hero-gradient {
+    background: var(--gradient-hero);
+  }
+
+  .medical-shadow {
+    box-shadow: var(--shadow-medical);
+  }
+
+  .card-shadow {
+    box-shadow: var(--shadow-card);
+  }
+
+  .elevated-shadow {
+    box-shadow: var(--shadow-elevated);
+  }
+}
+
+@layer components {
+  /* Enhanced medical card variants */
+  .medical-card {
+    @apply bg-gradient-card border border-border rounded-xl p-6 card-shadow hover:elevated-shadow transition-all duration-300;
+  }
+
+  .medical-card-interactive {
+    @apply medical-card hover:scale-105 hover:shadow-teal cursor-pointer transform transition-all duration-300;
+  }
+
+  .medical-card-feature {
+    @apply bg-card border border-border rounded-2xl p-6 card-shadow hover:shadow-teal hover:scale-102 cursor-pointer transform transition-all duration-300;
+  }
+
+  /* ECG visualization styles */
+  .ecg-grid {
+    background-image: linear-gradient(hsl(var(--border)) 1px, transparent 1px),
+                      linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  /* Progress indicators */
+  .progress-ring {
+    @apply relative w-20 h-20;
+  }
+
+  /* Enhanced medical button styles */
+  .btn-medical {
+    @apply bg-gradient-primary text-primary-foreground hover:bg-primary/90 font-medium py-3 px-6 rounded-lg transition-all duration-300 medical-shadow hover:shadow-teal transform hover:scale-105;
+  }
+
+  .btn-medical-outline {
+    @apply border-2 border-primary text-primary hover:bg-gradient-primary hover:text-primary-foreground font-medium py-3 px-6 rounded-lg transition-all duration-300 hover:shadow-teal transform hover:scale-105;
+  }
+
+  .btn-teal {
+    @apply bg-gradient-teal text-white hover:bg-success/90 font-medium py-3 px-6 rounded-lg transition-all duration-300 shadow-teal hover:scale-105;
+  }
+
+  /* Gradient icon backgrounds */
+  .icon-gradient {
+    @apply bg-gradient-primary;
+  }
+
+  .icon-gradient-teal {
+    @apply bg-gradient-teal;
+  }
+
+  /* Enhanced hover effects */
+  .hover-scale-102 {
+    @apply hover:scale-102 transition-transform duration-200;
+  }
+}
