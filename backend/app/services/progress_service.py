@@ -81,6 +81,47 @@ class ProgressService:
         return performance
 
     @staticmethod
+    def get_practice_progression(db: Session, user_id: int, weeks: int = 6) -> list[dict]:
+        """
+        Get user's practice progression by week (correct answers per attempt).
+
+        Returns:
+            List of weekly stats with correct answers count
+        """
+        from datetime import timedelta, datetime
+        
+        attempts = db.query(PracticeAttempt).filter(
+            PracticeAttempt.user_id == user_id
+        ).order_by(PracticeAttempt.created_at).all()
+
+        if not attempts:
+            return []
+
+        # Calculate weeks data
+        progression = []
+        end_date = datetime.utcnow()
+        
+        for week_num in range(weeks - 1, -1, -1):
+            week_start = end_date - timedelta(days=7 * (week_num + 1))
+            week_end = end_date - timedelta(days=7 * week_num)
+            
+            week_attempts = [
+                a for a in attempts 
+                if a.created_at and week_start <= a.created_at <= week_end
+            ]
+            
+            correct_count = len([a for a in week_attempts if a.is_correct == "True"])
+            
+            progression.append({
+                "week": f"Sem {weeks - week_num}",
+                "correct_answers": correct_count,
+                "total_attempts": len(week_attempts),
+                "accuracy": (correct_count / len(week_attempts) * 100) if week_attempts else 0
+            })
+
+        return progression
+
+    @staticmethod
     def generate_recommendations(
         db: Session, user_id: int
     ) -> list[dict]:

@@ -76,3 +76,15 @@ async def get_arrhythmia_stats(
     return {
         "arrhythmia_stats": performance,
     }
+
+
+@router.get("/progression")
+async def get_practice_progression(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Get user's practice progression by week."""
+    progression = ProgressService.get_practice_progression(db, current_user.id, weeks=6)
+    return {
+        "progression": progression,
+    }
