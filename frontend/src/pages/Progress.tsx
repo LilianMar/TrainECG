@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress as ProgressBar } from "@/components/ui/progress";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { apiRequest } from "@/lib/api";
 
 interface ProgressionData {
@@ -12,6 +12,14 @@ interface ProgressionData {
   correct_answers: number;
   total_attempts: number;
   accuracy: number;
+}
+
+interface TestAttempt {
+  attempt: string;
+  score: number;
+  confidence: number;
+  predicted_class: string;
+  created_at: string;
 }
 
 const Progress = () => {
@@ -26,6 +34,7 @@ const Progress = () => {
     total_achievements: number;
   } | null>(null);
   const [progression, setProgression] = useState<ProgressionData[]>([]);
+  const [testAttempts, setTestAttempts] = useState<TestAttempt[]>([]);
   const [arrhythmiaStats, setArrhythmiaStats] = useState<Array<{
     name: string;
     correct: number;
@@ -74,6 +83,13 @@ const Progress = () => {
         );
         if (progressionResponse.progression) {
           setProgression(progressionResponse.progression);
+        }
+
+        const testResponse = await apiRequest<{ test_attempts: TestAttempt[] }>(
+          "/progress/test-attempts"
+        );
+        if (testResponse.test_attempts) {
+          setTestAttempts(testResponse.test_attempts);
         }
 
         const statsResponse = await apiRequest<{ arrhythmia_stats: Record<string, { correct: number; total: number; accuracy: number }> }>(
@@ -174,30 +190,32 @@ const Progress = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Correct Answers Progression Chart */}
+          {/* Test Attempts Performance Chart */}
           <Card className="medical-card">
             <CardHeader>
-              <CardTitle>Respuestas Correctas por Semana</CardTitle>
+              <CardTitle>Desempeño en Test Inicial (Últimos 6 intentos)</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={progression.length > 0 ? progression : performanceData}>
+                <LineChart data={testAttempts.length > 0 ? testAttempts : performanceData}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey={progression.length > 0 ? "week" : "date"} />
-                  <YAxis />
+                  <XAxis dataKey={testAttempts.length > 0 ? "attempt" : "date"} />
+                  <YAxis domain={[0, 100]} />
                   <Tooltip 
                     formatter={(value, name) => {
-                      if (name === "correct_answers") return [`${value} correctas`, "Respuestas"];
-                      if (name === "total_attempts") return [`${value} totales`, "Intentos"];
+                      if (name === "score") return [`${value}%`, "Puntuación"];
                       return [`${value}%`, "Precisión"];
                     }}
                   />
-                  {progression.length > 0 ? (
-                    <Bar dataKey="correct_answers" fill="hsl(var(--success))" />
-                  ) : (
-                    <Bar dataKey="accuracy" fill="hsl(var(--primary))" />
-                  )}
-                </BarChart>
+                  <Line 
+                    type="monotone" 
+                    dataKey={testAttempts.length > 0 ? "score" : "accuracy"}
+                    stroke="hsl(var(--primary))" 
+                    strokeWidth={3}
+                    dot={{ fill: "hsl(var(--primary))", strokeWidth: 2, r: 6 }}
+                    activeDot={{ r: 8 }}
+                  />
+                </LineChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>

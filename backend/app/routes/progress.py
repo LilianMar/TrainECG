@@ -88,3 +88,35 @@ async def get_practice_progression(
     return {
         "progression": progression,
     }
+
+
+@router.get("/test-attempts")
+async def get_test_attempts(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Get last 6 test attempts with scores."""
+    from app.models.ecg import ECGClassification
+    
+    attempts = db.query(ECGClassification).filter(
+        ECGClassification.user_id == current_user.id
+    ).order_by(ECGClassification.created_at.desc()).limit(6).all()
+    
+    # Reverse to show chronologically (oldest to newest)
+    attempts = list(reversed(attempts))
+    
+    test_data = []
+    for idx, attempt in enumerate(attempts, 1):
+        # Score is confidence * 100 (assuming it's between 0-1)
+        score = int(attempt.confidence * 100) if attempt.confidence else 0
+        test_data.append({
+            "attempt": f"Test {idx}",
+            "score": score,
+            "confidence": attempt.confidence,
+            "predicted_class": attempt.predicted_class.value if attempt.predicted_class else None,
+            "created_at": attempt.created_at.isoformat() if attempt.created_at else None,
+        })
+    
+    return {
+        "test_attempts": test_data,
+    }
