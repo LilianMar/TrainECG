@@ -34,6 +34,7 @@ const Login = () => {
       toast({
         title: "Bienvenido a TrainECG",
         description: "Has iniciado sesión exitosamente.",
+        variant: "success",
       });
       navigate("/dashboard");
     } catch (error) {

@@ -1,4 +1,4 @@
-import { getAccessToken } from "@/lib/auth";
+import { getAccessToken, clearAccessToken } from "@/lib/auth";
 
 type ApiRequestOptions = {
   method?: string;
@@ -56,6 +56,13 @@ export const apiRequest = async <T>(
   });
 
   if (!response.ok) {
+    // Si el token es inválido o expiró, limpiar y redirigir al login
+    if (response.status === 401) {
+      clearAccessToken();
+      window.location.href = "/login";
+      throw new Error("Sesión expirada. Por favor, inicia sesión nuevamente.");
+    }
+    
     const message = await getErrorMessage(response);
     throw new Error(message);
   }

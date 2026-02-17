@@ -3,7 +3,9 @@ Main FastAPI application factory and startup/shutdown handlers.
 """
 
 from contextlib import asynccontextmanager
+from pathlib import Path
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from app.core.config import get_settings
 from app.database import engine, Base
 from app.routes import auth, users, health, ecg, practice, progress
@@ -84,6 +86,12 @@ def create_app() -> FastAPI:
     app.include_router(ecg.router)
     app.include_router(practice.router)
     app.include_router(progress.router)
+
+    # Mount static files for practice ECG images
+    uploads_path = Path(__file__).parent.parent / "uploads"
+    if uploads_path.exists():
+        app.mount("/uploads", StaticFiles(directory=str(uploads_path)), name="uploads")
+        logger.info(f"Static files mounted at /uploads from {uploads_path}")
 
     logger.info("FastAPI application created successfully")
     return app

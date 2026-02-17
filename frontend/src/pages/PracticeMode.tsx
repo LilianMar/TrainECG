@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/api";
+import { getImageUrl } from "@/lib/image";
 
 const PracticeMode = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -108,6 +109,7 @@ const PracticeMode = () => {
         toast({
           title: "¡Correcto!",
           description: "Excelente diagnostico.",
+          variant: "success",
         });
       } else {
         toast({
@@ -137,6 +139,7 @@ const PracticeMode = () => {
       toast({
         title: "¡Práctica completada!",
         description: `Puntuacion final: ${score}/${questions.length}`,
+        variant: "success",
       });
     }
   };
@@ -218,13 +221,32 @@ const PracticeMode = () => {
                 <CardTitle>ECG para Análisis</CardTitle>
               </CardHeader>
               <CardContent>
-                  <div className="bg-secondary rounded-lg p-4 ecg-grid min-h-[300px] flex items-center justify-center">
-                  <div className="text-center">
-                    <Brain className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">
-                      Imagen de ECG #{currentQ.id}
-                    </p>
-                  </div>
+                <div className="bg-secondary rounded-lg p-4 ecg-grid min-h-[300px] flex items-center justify-center overflow-hidden">
+                  {currentQ?.image_path ? (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <img 
+                        src={getImageUrl(currentQ.image_path)}
+                        alt="ECG para análisis"
+                        className="w-full h-auto object-contain rounded-md max-h-96"
+                        onError={(e) => {
+                          const img = e.currentTarget;
+                          console.error('[IMG ERROR] Failed to load image:', img.src);
+                          console.error('[IMG ERROR] Alt text:', img.alt);
+                          img.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="100"%3E%3Crect fill="%23eee" width="200" height="100"/%3E%3Ctext x="50%" y="50%" text-anchor="middle" dy=".3em" fill="%23999" font-size="14"%3EError loading image%3C/text%3E%3C/svg%3E';
+                        }}
+                        onLoad={() => {
+                          console.log('[IMG LOADED] Image loaded successfully:', currentQ.image_path);
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <Brain className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-muted-foreground">
+                        No hay imagen disponible
+                      </p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

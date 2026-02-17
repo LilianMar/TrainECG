@@ -69,6 +69,7 @@ const Register = () => {
       toast({
         title: "¡Registro exitoso!",
         description: "Tu cuenta ha sido creada. Bienvenido a TrainECG.",
+        variant: "success",
       });
       navigate("/dashboard");
     } catch (error) {

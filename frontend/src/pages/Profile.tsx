@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, User, Mail, GraduationCap, Calendar, Edit, Settings, MapPin, TrendingUp, Activity as ActivityIcon, Award } from "lucide-react";
+import { ArrowLeft, User, Mail, GraduationCap, Calendar, Edit, Settings, MapPin, TrendingUp, Activity as ActivityIcon, Award, Save, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/api";
 
 interface UserStats {
@@ -21,6 +24,10 @@ interface Activity {
 }
 
 const Profile = () => {
+  const { toast } = useToast();
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  
   const [userProfile, setUserProfile] = useState<{
     name: string;
     email: string;
@@ -29,6 +36,14 @@ const Profile = () => {
     joinDate: string;
     avatar: string;
   } | null>(null);
+
+  const [editedData, setEditedData] = useState<{
+    name: string;
+    institution: string;
+  }>({
+    name: "",
+    institution: "",
+  });
 
   const [stats, setStats] = useState<UserStats>({
     total_ecgs: 0,
@@ -64,6 +79,12 @@ const Profile = () => {
           institution: response.institution ?? "",
           joinDate,
           avatar: "/api/placeholder/120/120",
+        });
+
+        // Inicializar datos para edición
+        setEditedData({
+          name: response.name,
+          institution: response.institution || "",
         });
       } catch {
         setUserProfile(null);
@@ -108,6 +129,72 @@ const Profile = () => {
     loadActivity();
     detectLocation();
   }, []);
+
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleCancel = () => {
+    // Restaurar datos originales
+    if (userProfile) {
+      setEditedData({
+        name: userProfile.name,
+        institution: userProfile.institution || "",
+      });
+    }
+    setIsEditing(false);
+  };
+
+  const handleSave = async () => {
+    if (!editedData.name.trim()) {
+      toast({
+        title: "Error de validación",
+        description: "El nombre no puede estar vacío.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const response = await apiRequest<{
+        name: string;
+        email: string;
+        user_type: string;
+        institution?: string | null;
+        created_at: string;
+      }>("/users/me", {
+        method: "PUT",
+        body: {
+          name: editedData.name,
+          institution: editedData.institution || null,
+        },
+      });
+
+      // Actualizar el perfil con los nuevos datos
+      setUserProfile(prev => prev ? {
+        ...prev,
+        name: response.name,
+        institution: response.institution ?? "",
+      } : null);
+
+      setIsEditing(false);
+      toast({
+        title: "Perfil actualizado",
+        description: "Tus datos se han guardado exitosamente.",
+        variant: "success",
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "No se pudo actualizar el perfil";
+      toast({
+        title: "Error al actualizar",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const statsDisplay = [
     { 
@@ -161,10 +248,38 @@ const Profile = () => {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle>Información Personal</CardTitle>
-                  <Button variant="outline" size="sm">
-                    <Edit className="w-4 h-4 mr-2" />
-                    Editar
-                  </Button>
+                  <div className="flex gap-2">
+                    {isEditing ? (
+                      <>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={handleCancel}
+                          disabled={isSaving}
+                        >
+                          <X className="w-4 h-4 mr-2" />
+                          Cancelar
+                        </Button>
+                        <Button 
+                          size="sm"
+                          onClick={handleSave}
+                          disabled={isSaving}
+                        >
+                          <Save className="w-4 h-4 mr-2" />
+                          {isSaving ? "Guardando..." : "Guardar"}
+                        </Button>
+                      </>
+                    ) : (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={handleEdit}
+                      >
+                        <Edit className="w-4 h-4 mr-2" />
+                        Editar
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -177,36 +292,90 @@ const Profile = () => {
                   </Avatar>
                   
                   <div className="flex-1 space-y-4">
-                    <div>
-                      <h2 className="text-2xl font-bold text-foreground mb-1">
-                        {userProfile?.name || "Usuario"}
-                      </h2>
-                      <Badge variant="secondary" className="mb-2">
-                        {userProfile?.userType || ""}
-                      </Badge>
-                    </div>
+                    {isEditing ? (
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="name">Nombre completo</Label>
+                          <Input
+                            id="name"
+                            value={editedData.name}
+                            onChange={(e) => setEditedData(prev => ({ ...prev, name: e.target.value }))}
+                            placeholder="Ingresa tu nombre"
+                            className="mt-1"
+                          />
+                        </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="flex items-center space-x-2">
-                        <Mail className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-sm">{userProfile?.email || ""}</span>
+                        <div>
+                          <Label htmlFor="email">Correo electrónico</Label>
+                          <Input
+                            id="email"
+                            value={userProfile?.email || ""}
+                            disabled
+                            className="mt-1 bg-muted"
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            El correo no se puede modificar
+                          </p>
+                        </div>
+
+                        <div>
+                          <Label htmlFor="institution">Institución</Label>
+                          <Input
+                            id="institution"
+                            value={editedData.institution}
+                            onChange={(e) => setEditedData(prev => ({ ...prev, institution: e.target.value }))}
+                            placeholder="Nombre de tu institución"
+                            className="mt-1"
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="userType">Tipo de usuario</Label>
+                          <Input
+                            id="userType"
+                            value={userProfile?.userType || ""}
+                            disabled
+                            className="mt-1 bg-muted"
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            El tipo de usuario no se puede modificar
+                          </p>
+                        </div>
                       </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <GraduationCap className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-sm">{userProfile?.institution || "No especificado"}</span>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <Calendar className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-sm">Miembro desde {userProfile?.joinDate || ""}</span>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <MapPin className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-sm">{location}</span>
-                      </div>
-                    </div>
+                    ) : (
+                      <>
+                        <div>
+                          <h2 className="text-2xl font-bold text-foreground mb-1">
+                            {userProfile?.name || "Usuario"}
+                          </h2>
+                          <Badge variant="secondary" className="mb-2">
+                            {userProfile?.userType || ""}
+                          </Badge>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="flex items-center space-x-2">
+                            <Mail className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm">{userProfile?.email || ""}</span>
+                          </div>
+                          
+                          <div className="flex items-center space-x-2">
+                            <GraduationCap className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm">{userProfile?.institution || "No especificado"}</span>
+                          </div>
+                          
+                          <div className="flex items-center space-x-2">
+                            <Calendar className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm">Miembro desde {userProfile?.joinDate || ""}</span>
+                          </div>
+                          
+                          <div className="flex items-center space-x-2">
+                            <MapPin className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm">{location}</span>
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               </CardContent>
