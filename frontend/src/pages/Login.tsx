@@ -143,18 +143,6 @@ const Login = () => {
             </form>
           </CardContent>
         </Card>
-
-        {/* Demo Access */}
-        <Card className="mt-4 bg-secondary/50">
-          <CardContent className="p-4 text-center">
-            <p className="text-sm text-muted-foreground mb-2">
-              Acceso de demostración:
-            </p>
-            <p className="text-xs text-muted-foreground">
-              demo@trainecg.com / demo123
-            </p>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
