@@ -214,7 +214,7 @@ const PracticeMode = () => {
           </Card>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* ECG Display */}
+          {/* Left Side: ECG, Learning Tips */}
           <div className="space-y-6">
             <Card className="medical-card">
               <CardHeader>
@@ -248,6 +248,65 @@ const PracticeMode = () => {
                     </div>
                   )}
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Learning Tips */}
+            <Card className="medical-card">
+              <CardHeader>
+                <CardTitle className="text-sm">💡 Consejo de Aprendizaje</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Observa cuidadosamente el ritmo, la frecuencia y la morfología de las ondas. 
+                  Recuerda que la práctica regular mejora significativamente la precisión diagnóstica.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Side: Question, Options, Feedback */}
+          <div className="space-y-6">
+            <Card className="medical-card">
+              <CardHeader>
+                <CardTitle>{currentQ.question_text}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {[currentQ.option_a, currentQ.option_b, currentQ.option_c, currentQ.option_d].map((option, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleAnswerSelect(index)}
+                    disabled={showFeedback}
+                    className={`w-full p-4 text-left border rounded-lg transition-all ${
+                      selectedAnswer === index
+                        ? showFeedback
+                          ? index === answerFeedback?.correct_answer
+                            ? "border-success bg-success/10 text-success"
+                            : "border-destructive bg-destructive/10 text-destructive"
+                          : "border-primary bg-primary/10 text-primary"
+                        : showFeedback && index === answerFeedback?.correct_answer
+                        ? "border-success bg-success/10 text-success"
+                        : "border-border hover:border-primary/50 hover:bg-primary/5"
+                    }`}
+                  >
+                    <div className="flex items-center">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full border border-current flex items-center justify-center mr-3 text-xs font-medium">
+                        {String.fromCharCode(65 + index)}
+                      </span>
+                      <span>{option}</span>
+                    </div>
+                  </button>
+                ))}
+
+                {!showFeedback && (
+                  <Button 
+                    onClick={handleSubmitAnswer} 
+                    className="btn-medical w-full mt-6"
+                    disabled={selectedAnswer === null}
+                  >
+                    Enviar Respuesta
+                  </Button>
+                )}
               </CardContent>
             </Card>
 
@@ -309,65 +368,6 @@ const PracticeMode = () => {
                 </CardContent>
               </Card>
             )}
-          </div>
-
-          {/* Question and Options */}
-          <div className="space-y-6">
-            <Card className="medical-card">
-              <CardHeader>
-                <CardTitle>{currentQ.question_text}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {[currentQ.option_a, currentQ.option_b, currentQ.option_c, currentQ.option_d].map((option, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleAnswerSelect(index)}
-                    disabled={showFeedback}
-                    className={`w-full p-4 text-left border rounded-lg transition-all ${
-                      selectedAnswer === index
-                        ? showFeedback
-                          ? index === answerFeedback?.correct_answer
-                            ? "border-success bg-success/10 text-success"
-                            : "border-destructive bg-destructive/10 text-destructive"
-                          : "border-primary bg-primary/10 text-primary"
-                        : showFeedback && index === answerFeedback?.correct_answer
-                        ? "border-success bg-success/10 text-success"
-                        : "border-border hover:border-primary/50 hover:bg-primary/5"
-                    }`}
-                  >
-                    <div className="flex items-center">
-                      <span className="flex-shrink-0 w-6 h-6 rounded-full border border-current flex items-center justify-center mr-3 text-xs font-medium">
-                        {String.fromCharCode(65 + index)}
-                      </span>
-                      <span>{option}</span>
-                    </div>
-                  </button>
-                ))}
-
-                {!showFeedback && (
-                  <Button 
-                    onClick={handleSubmitAnswer} 
-                    className="btn-medical w-full mt-6"
-                    disabled={selectedAnswer === null}
-                  >
-                    Enviar Respuesta
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Learning Tips */}
-            <Card className="medical-card">
-              <CardHeader>
-                <CardTitle className="text-sm">💡 Consejo de Aprendizaje</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Observa cuidadosamente el ritmo, la frecuencia y la morfología de las ondas. 
-                  Recuerda que la práctica regular mejora significativamente la precisión diagnóstica.
-                </p>
-              </CardContent>
-            </Card>
           </div>
           </div>
         )}
