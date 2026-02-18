@@ -58,7 +58,7 @@ class PracticeAnswerRequest(BaseModel):
     """Schema for practice answer submission."""
     question_id: int
     selected_answer: int = Field(..., ge=0, le=3)
-    time_spent_seconds: int = Field(..., gt=0)
+    time_spent_seconds: int = Field(..., ge=0)
 
 
 class PracticeAnswerResponse(BaseModel):

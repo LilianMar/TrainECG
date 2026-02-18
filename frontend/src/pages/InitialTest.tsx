@@ -94,7 +94,7 @@ const InitialTest = () => {
     }
 
     try {
-      const timeSpent = Math.round((Date.now() - questionStartedAt) / 1000);
+      const timeSpent = Math.max(1, Math.round((Date.now() - questionStartedAt) / 1000));
 
       const response = await apiRequest<{
         is_correct: boolean;
