@@ -9,6 +9,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import ClassifyECG from "./pages/ClassifyECG";
 import PracticeMode from "./pages/PracticeMode";
+import InitialTest from "./pages/InitialTest";
 import Progress from "./pages/Progress";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
@@ -30,8 +31,8 @@ const App = () => (
           <Route path="/practice" element={<ProtectedRoute><PracticeMode /></ProtectedRoute>} />
           <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/test" element={<ProtectedRoute><InitialTest /></ProtectedRoute>} />
           {/* Placeholder routes */}
-          <Route path="/test" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/library" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           {/* Catch-all route */}
           <Route path="*" element={<NotFound />} />
