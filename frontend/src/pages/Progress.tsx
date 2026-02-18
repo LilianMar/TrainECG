@@ -22,6 +22,15 @@ interface TestAttempt {
   created_at: string;
 }
 
+interface Badge {
+  id: number;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  earned_at: string;
+}
+
 const Progress = () => {
   const [progressData, setProgressData] = useState<{
     total_ecgs_analyzed: number;
@@ -31,7 +40,6 @@ const Progress = () => {
     total_practice_correct: number;
     current_streak_days: number;
     longest_streak_days: number;
-    total_achievements: number;
   } | null>(null);
   const [progression, setProgression] = useState<ProgressionData[]>([]);
   const [testAttempts, setTestAttempts] = useState<TestAttempt[]>([]);
@@ -47,6 +55,7 @@ const Progress = () => {
     accuracy: number;
     message: string;
   }>>([]);
+  const [badges, setBadges] = useState<Badge[]>([]);
   // Sample data for charts
   const performanceData = [
     { date: "Sem 1", accuracy: 65, cases: 8 },
@@ -62,13 +71,7 @@ const Progress = () => {
     { name: "Incorrecto", value: 100 - (progressData?.practice_accuracy ?? 0), color: "hsl(var(--destructive))" },
   ];
 
-  const achievements = [
-    { title: "Primera Clasificacion", description: "Completaste tu primer analisis de ECG", earned: (progressData?.total_ecgs_analyzed ?? 0) > 0 },
-    { title: "Racha de 7 dias", description: "Practica durante 7 dias consecutivos", earned: (progressData?.current_streak_days ?? 0) >= 7 },
-    { title: "Maestro de FA", description: "90% de precision en fibrilacion auricular", earned: false },
-    { title: "Analista Experto", description: "100 ECGs analizados correctamente", earned: (progressData?.total_ecgs_analyzed ?? 0) >= 100 },
-    { title: "Perfeccionista", description: "10 respuestas perfectas consecutivas", earned: false },
-  ];
+
 
   useEffect(() => {
     const loadProgress = async () => {
@@ -109,6 +112,11 @@ const Progress = () => {
           "/progress/recommendations"
         );
         setRecommendations(recommendationsResponse.recommendations ?? []);
+
+        const badgesResponse = await apiRequest<{ earned_badges: Badge[] }>(
+          "/achievements"
+        );
+        setBadges(badgesResponse.earned_badges ?? []);
       } catch {
         // Keep placeholders if API is unavailable
       }
@@ -178,9 +186,9 @@ const Progress = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Logros</p>
+                  <p className="text-sm text-muted-foreground">Insignias</p>
                   <p className="text-2xl font-bold text-foreground">
-                    {achievements.filter((item) => item.earned).length}/{achievements.length}
+                    {badges.length}
                   </p>
                 </div>
                 <Award className="w-8 h-8 text-foreground" />
@@ -286,35 +294,38 @@ const Progress = () => {
             </CardContent>
           </Card>
 
-          {/* Achievements */}
+          {/* Achievements/Badges */}
           <Card className="medical-card">
             <CardHeader>
-              <CardTitle>Logros</CardTitle>
+              <CardTitle>Insignias Desbloqueadas ({badges.length})</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {achievements.map((achievement, index) => (
-                  <div key={index} className={`flex items-center space-x-3 p-3 rounded-lg border ${
-                    achievement.earned 
-                      ? "border-success/20 bg-success/10" 
-                      : "border-border bg-muted/50"
-                  }`}>
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      achievement.earned ? "bg-success text-white" : "bg-muted text-muted-foreground"
-                    }`}>
-                      <Award className="w-5 h-5" />
+              {badges.length === 0 ? (
+                <div className="text-center p-6">
+                  <Award className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">
+                    Completa tests y práctica para desbloquear insignias
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {badges.map((badge, index) => (
+                    <div 
+                      key={index} 
+                      className="flex items-center space-x-3 p-3 rounded-lg border border-success/20 bg-success/10"
+                    >
+                      <div className="text-2xl">{badge.icon}</div>
+                      <div className="flex-1">
+                        <h4 className="font-medium text-success">{badge.name}</h4>
+                        <p className="text-xs text-muted-foreground mb-1">{badge.description}</p>
+                        <p className="text-xs text-success/70">
+                          Desbloqueado: {new Date(badge.earned_at).toLocaleDateString('es-ES')}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <h4 className={`font-medium ${achievement.earned ? "text-success" : "text-muted-foreground"}`}>
-                        {achievement.title}
-                      </h4>
-                      <p className="text-xs text-muted-foreground">
-                        {achievement.description}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from app.core.config import get_settings
 from app.database import engine, Base
-from app.routes import auth, users, health, ecg, practice, progress
+from app.routes import auth, users, health, ecg, practice, progress, achievements
 from app.middleware.cors import setup_cors_middleware
 from app.middleware.logging import setup_logging_middleware
 from app.utils.logger import get_logger, ensure_upload_directory, ensure_logs_directory
@@ -86,6 +86,7 @@ def create_app() -> FastAPI:
     app.include_router(ecg.router)
     app.include_router(practice.router)
     app.include_router(progress.router)
+    app.include_router(achievements.router)
 
     # Mount static files for practice ECG images
     uploads_path = Path(__file__).parent.parent / "uploads"

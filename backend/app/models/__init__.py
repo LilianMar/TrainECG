@@ -6,6 +6,7 @@ Exports all SQLAlchemy models.
 from app.models.user import User, UserTypeEnum
 from app.models.ecg import ECGClassification, PracticeQuestion, PracticeAttempt, ArrhythmiaClassEnum
 from app.models.progress import UserProgress
+from app.models.achievement import UserAchievement
 
 __all__ = [
     "User",
@@ -15,4 +16,5 @@ __all__ = [
     "PracticeAttempt",
     "ArrhythmiaClassEnum",
     "UserProgress",
+    "UserAchievement",
 ]

@@ -17,6 +17,7 @@ from app.models.user import User
 from app.routes.users import get_current_user
 from app.schemas.ecg import ECGClassificationResponse, WindowCoordinate
 from app.services.ecg_service import ECGService
+from app.services.achievement_service import AchievementService
 from app.utils import (
     get_file_size_mb,
     get_logger,
@@ -124,6 +125,13 @@ async def classify_ecg(
             gradcam_windows=gradcam_windows,
             llm_explanation=llm_explanation,
             processing_time_ms=processing_time_ms,
+        )
+
+        # Check and unlock achievements
+        achievement_service = AchievementService(db)
+        newly_unlocked = achievement_service.check_and_unlock_badges(
+            user_id=current_user.id,
+            test_attempt_id=classification.id
         )
 
         logger.info(
