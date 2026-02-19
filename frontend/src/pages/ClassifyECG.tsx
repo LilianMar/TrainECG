@@ -141,8 +141,9 @@ const ClassifyECG = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <main className="bg-gray-50/30 py-8">
+        <div className="container mx-auto px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Upload Section */}
           <div className="space-y-6">
             <Card className="medical-card">
@@ -308,6 +309,7 @@ const ClassifyECG = () => {
                 </CardContent>
               </Card>
             )}
+          </div>
           </div>
         </div>
       </main>

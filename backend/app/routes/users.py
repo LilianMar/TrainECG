@@ -135,12 +135,25 @@ async def get_user_stats(
         .filter(PracticeAttempt.user_id == current_user.id)\
         .distinct()
     
-    # Union of both queries
+    # Union of both queries - convert string dates to date objects
     activity_dates = set()
     for row in ecg_dates:
-        activity_dates.add(row.activity_date)
+        try:
+            if isinstance(row.activity_date, str):
+                activity_dates.add(datetime.strptime(row.activity_date, '%Y-%m-%d').date())
+            else:
+                activity_dates.add(row.activity_date)
+        except (ValueError, TypeError):
+            pass
+    
     for row in practice_dates:
-        activity_dates.add(row.activity_date)
+        try:
+            if isinstance(row.activity_date, str):
+                activity_dates.add(datetime.strptime(row.activity_date, '%Y-%m-%d').date())
+            else:
+                activity_dates.add(row.activity_date)
+        except (ValueError, TypeError):
+            pass
     
     # Calculate consecutive days
     if activity_dates:
@@ -153,18 +166,28 @@ async def get_user_stats(
                 else:
                     break
     
-    # Determine rank based on accuracy and total ECGs
+    # Determine rank based on skill_level from initial test
     rank = "Principiante"
-    if total_ecgs >= 50 and avg_accuracy >= 80:
-        rank = "Avanzado"
-    elif total_ecgs >= 20 and avg_accuracy >= 70:
-        rank = "Intermedio"
+    if current_user.skill_level:
+        if current_user.skill_level in [4, 5]:
+            rank = "Avanzado"
+        elif current_user.skill_level == 3:
+            rank = "Intermedio"
+        else:  # skill_level 1 or 2
+            rank = "Principiante"
+    else:
+        # Fallback to practice accuracy if no skill_level yet
+        if total_ecgs >= 50 and avg_accuracy >= 80:
+            rank = "Avanzado"
+        elif total_ecgs >= 20 and avg_accuracy >= 70:
+            rank = "Intermedio"
     
     return {
         "total_ecgs": total_ecgs,
         "avg_accuracy": avg_accuracy,
         "consecutive_days": consecutive_days,
-        "rank": rank
+        "rank": rank,
+        "skill_level": current_user.skill_level,
     }
 
 

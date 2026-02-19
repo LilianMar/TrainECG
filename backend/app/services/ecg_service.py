@@ -200,3 +200,42 @@ class ECGService:
             db.rollback()
             logger.error(f"Error creating practice question: {str(e)}")
             raise
+
+    @staticmethod
+    def calculate_skill_level(accuracy: float) -> int:
+        """
+        Calculate skill level based on accuracy percentage.
+        
+        Levels:
+        - 1: 0-40% (Beginner)
+        - 2: 41-60% (Developing)
+        - 3: 61-75% (Intermediate)
+        - 4: 76-90% (Advanced)
+        - 5: 91-100% (Expert)
+        """
+        if accuracy >= 91:
+            return 5
+        elif accuracy >= 76:
+            return 4
+        elif accuracy >= 61:
+            return 3
+        elif accuracy >= 41:
+            return 2
+        else:
+            return 1
+
+    @staticmethod
+    def get_user_practice_stats(db: Session, user_id: int) -> tuple:
+        """
+        Get user's practice statistics.
+        Returns: (total_attempts, correct_answers, accuracy)
+        """
+        attempts = db.query(PracticeAttempt).filter(
+            PracticeAttempt.user_id == user_id
+        ).all()
+        
+        total = len(attempts)
+        correct = sum(1 for attempt in attempts if attempt.is_correct == "True")
+        accuracy = (correct / total * 100) if total > 0 else 0
+        
+        return total, correct, accuracy

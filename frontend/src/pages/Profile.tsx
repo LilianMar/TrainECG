@@ -15,6 +15,7 @@ interface UserStats {
   avg_accuracy: number;
   consecutive_days: number;
   rank: string;
+  skill_level?: number | null;
 }
 
 interface Activity {
@@ -32,6 +33,7 @@ const Profile = () => {
     name: string;
     email: string;
     userType: string;
+    skillLevel?: number | null;
     institution?: string | null;
     joinDate: string;
     avatar: string;
@@ -49,7 +51,8 @@ const Profile = () => {
     total_ecgs: 0,
     avg_accuracy: 0,
     consecutive_days: 0,
-    rank: "Principiante"
+    rank: "Principiante",
+    skill_level: null
   });
 
   const [recentActivity, setRecentActivity] = useState<Activity[]>([]);
@@ -62,6 +65,7 @@ const Profile = () => {
           name: string;
           email: string;
           user_type: string;
+          skill_level?: number | null;
           institution?: string | null;
           created_at: string;
         }>("/users/me");
@@ -76,6 +80,7 @@ const Profile = () => {
           name: response.name,
           email: response.email,
           userType: response.user_type,
+          skillLevel: response.skill_level,
           institution: response.institution ?? "",
           joinDate,
           avatar: "/api/placeholder/120/120",
@@ -217,7 +222,7 @@ const Profile = () => {
     },
     { 
       label: "Rango Actual", 
-      value: stats.rank, 
+      value: stats.skill_level ? `${stats.rank} (${stats.skill_level}/5)` : stats.rank, 
       color: "text-foreground",
       icon: Award
     }
@@ -226,22 +231,24 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-card border-b border-border">
-        <div className="container mx-auto px-6 py-4">
+      <header className="bg-gradient-hero relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-transparent" />
+        <div className="relative z-10 container mx-auto px-6 py-4">
           <div className="flex items-center space-x-4">
             <Link to="/dashboard">
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Volver
               </Button>
             </Link>
-            <h1 className="text-2xl font-bold text-foreground">Mi Perfil</h1>
+            <h1 className="text-2xl font-bold text-white">Mi Perfil</h1>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <main className="bg-gray-50/30 py-8">
+        <div className="container mx-auto px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Profile Information */}
           <div className="lg:col-span-2 space-y-6">
             <Card className="medical-card">
@@ -348,9 +355,16 @@ const Profile = () => {
                           <h2 className="text-2xl font-bold text-foreground mb-1">
                             {userProfile?.name || "Usuario"}
                           </h2>
-                          <Badge variant="secondary" className="mb-2">
-                            {userProfile?.userType || ""}
-                          </Badge>
+                          <div className="flex gap-2 mb-2">
+                            <Badge variant="secondary">
+                              {userProfile?.userType || ""}
+                            </Badge>
+                            {userProfile?.skillLevel && (
+                              <Badge variant="outline" className="bg-primary/10 border-primary text-primary">
+                                Nivel {userProfile.skillLevel}/5
+                              </Badge>
+                            )}
+                          </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -531,6 +545,7 @@ const Profile = () => {
                 </div>
               </CardContent>
             </Card>
+          </div>
           </div>
         </div>
       </main>

@@ -33,6 +33,9 @@ class UserResponse(UserBase):
     id: int
     is_active: bool
     is_verified: bool
+    skill_level: Optional[int] = None
+    initial_test_completed: bool = False
+    initial_test_score: Optional[int] = None
     created_at: datetime
     updated_at: datetime
     last_login: Optional[datetime] = None

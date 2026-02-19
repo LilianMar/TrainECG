@@ -64,7 +64,7 @@ class PracticeQuestion(Base):
     option_c = Column(String(255), nullable=False)
     option_d = Column(String(255), nullable=False)
     explanation = Column(Text, nullable=False)
-    correct_class = Column(Enum(ArrhythmiaClassEnum), nullable=False)
+    correct_class = Column(String(100), nullable=False)  # Store as string for SQLite compatibility
     difficulty_level = Column(Integer, default=1, nullable=False)  # 1-5
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 

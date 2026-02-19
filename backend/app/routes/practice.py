@@ -13,9 +13,11 @@ from app.schemas.ecg import (
     PracticeAnswerResponse,
     PracticeQuestionList,
     PracticeQuestionResponse,
+    RecommendationResponse,
 )
 from app.services.ecg_service import ECGService
 from app.services.progress_service import ProgressService
+from app.services.llm_service import LLMService
 from app.utils import get_logger
 
 logger = get_logger(__name__)
@@ -121,3 +123,198 @@ async def get_practice_stats(
         "correct_answers": correct,
         "accuracy_percentage": accuracy,
     }
+
+@router.post("/complete-initial-test")
+async def complete_initial_test(
+    request_data: dict,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Complete the initial test and assign skill level to the user.
+    
+    Body:
+    - **score**: Number of correct answers
+    - **total**: Total number of questions
+    """
+    try:
+        score = request_data.get("score")
+        total = request_data.get("total")
+
+        if score is None or total is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Missing score or total",
+            )
+
+        if total == 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Total questions must be greater than 0",
+            )
+
+        # Calculate accuracy percentage
+        accuracy = (score / total) * 100
+
+        # Calculate skill level based on accuracy
+        skill_level = ECGService.calculate_skill_level(accuracy)
+
+        # Update user with skill level and test completion
+        current_user.skill_level = skill_level
+        current_user.initial_test_completed = True
+        current_user.initial_test_score = score
+
+        db.add(current_user)
+        db.commit()
+        db.refresh(current_user)
+
+        logger.info(
+            f"User {current_user.id} completed initial test with score {score}/{total} "
+            f"(accuracy: {accuracy}%, skill_level: {skill_level})"
+        )
+
+        return {
+            "success": True,
+            "skill_level": skill_level,
+            "accuracy": accuracy,
+            "message": f"Initial test completed. Your skill level is {skill_level}/5",
+        }
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error(f"Error completing initial test: {str(exc)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to complete initial test",
+        ) from exc
+
+
+@router.post("/post-practice-test", response_model=dict)
+async def post_practice_test(
+    request_data: dict,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Submit post-practice test answers and get recommendations.
+    
+    This test evaluates progress after practice sessions.
+    Compares initial skill level with new level after post-practice test.
+    
+    Body:
+    - **answers**: List of {question_id, selected_answer, time_spent_seconds}
+    - **test_questions**: List of full question objects with correct answers (for calculation)
+    """
+    try:
+        if not current_user.initial_test_completed:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Complete initial test first",
+            )
+
+        answers = request_data.get("answers", [])
+        test_questions = request_data.get("test_questions", [])
+
+        if not answers or not test_questions:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Missing answers or test questions",
+            )
+
+        # Calculate score
+        score = 0
+        wrong_questions = []
+        total_attempts = 0
+
+        for answer in answers:
+            question_id = answer.get("question_id")
+            selected_answer = answer.get("selected_answer")
+
+            # Find the question in test_questions
+            question = next(
+                (q for q in test_questions if q.get("id") == question_id), None
+            )
+
+            if not question:
+                continue
+
+            is_correct = selected_answer == question.get("correct_answer")
+            total_attempts += 1
+
+            if is_correct:
+                score += 1
+            else:
+                wrong_questions.append(question)
+
+            # Record attempt
+            ECGService.create_practice_attempt(
+                db=db,
+                user_id=current_user.id,
+                question_id=question_id,
+                selected_answer=selected_answer,
+                is_correct=is_correct,
+                time_spent_seconds=answer.get("time_spent_seconds", 0),
+            )
+
+        # Update practice progress counters
+        ProgressService.update_progress(
+            db=db,
+            user_id=current_user.id,
+            practice_attempts=total_attempts,
+            correct_answers=score,
+        )
+
+        # Calculate new skill level
+        total = len(test_questions)
+        accuracy = (score / total) * 100 if total > 0 else 0
+        new_skill_level = ECGService.calculate_skill_level(accuracy)
+
+        # Update progress
+        progress = ProgressService.get_or_create_progress(db, current_user.id)
+        previous_level = current_user.skill_level
+        progress.post_practice_tests_taken += 1
+        progress.post_practice_score = accuracy
+        progress.post_practice_level_achieved = new_skill_level
+
+        # Update user skill level if improved
+        if new_skill_level > current_user.skill_level:
+            current_user.skill_level = new_skill_level
+            logger.info(
+                f"User {current_user.id} leveled up from {previous_level} to {new_skill_level}"
+            )
+
+        db.add(progress)
+        db.add(current_user)
+        db.commit()
+
+        # Generate recommendations using LLM
+        recommendations = LLMService.generate_recommendations(
+            wrong_questions=wrong_questions,
+            skill_level=new_skill_level,
+            previous_level=previous_level,
+        )
+
+        logger.info(
+            f"User {current_user.id} completed post-practice test with score {score}/{total} "
+            f"(accuracy: {accuracy}%, new_level: {new_skill_level})"
+        )
+
+        return {
+            "success": True,
+            "score": score,
+            "total": total,
+            "accuracy": accuracy,
+            "previous_level": previous_level,
+            "new_level": new_skill_level,
+            "level_improved": new_skill_level > previous_level if previous_level else False,
+            "recommendations": recommendations,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error(f"Error in post-practice test: {str(exc)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to complete post-practice test",
+        ) from exc

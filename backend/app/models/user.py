@@ -31,6 +31,12 @@ class User(Base):
     institution = Column(String(255), nullable=True)
     is_active = Column(Boolean, default=True, nullable=False)
     is_verified = Column(Boolean, default=False, nullable=False)
+    
+    # Skill level tracking (1-5, None if initial test not completed)
+    skill_level = Column(Integer, nullable=True, default=None)
+    initial_test_completed = Column(Boolean, default=False, nullable=False)
+    initial_test_score = Column(Integer, nullable=True)  # Score from initial test
+    
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
     last_login = Column(DateTime(timezone=True), nullable=True)

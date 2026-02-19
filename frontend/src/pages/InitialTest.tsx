@@ -103,11 +103,11 @@ const InitialTest = () => {
         correct_class: string;
       }>("/practice/answer", {
         method: "POST",
-        body: JSON.stringify({
+        body: {
           question_id: currentQ.id,
           selected_answer: selectedAnswer,
           time_spent_seconds: timeSpent,
-        }),
+        },
       });
 
       setAnswerFeedback(response);
@@ -148,9 +148,32 @@ const InitialTest = () => {
     }
   };
 
-  const handleRestartTest = () => {
-    setScore(0);
-    loadQuestions();
+  const handleSubmitInitialTest = async () => {
+    try {
+      await apiRequest("/practice/complete-initial-test", {
+        method: "POST",
+        body: {
+          score,
+          total: questions.length,
+        },
+      });
+
+      toast({
+        title: "¡Nivel Asignado!",
+        description: "Tu nivel de habilidad ha sido asignado. Ahora puedes acceder a la práctica.",
+      });
+
+      // Navigate to dashboard first so user data reloads and sees the change
+      // Then can navigate to practice from there
+      setTimeout(() => navigate("/dashboard"), 2000);
+    } catch (error) {
+      console.error("Error submitting test:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo guardar tu nivel. Intenta nuevamente.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (isLoadingQuestions) {
@@ -170,71 +193,80 @@ const InitialTest = () => {
     const accuracy = questions.length ? Math.round((score / questions.length) * 100) : 0;
 
     return (
-      <div className="min-h-screen bg-background py-8">
-        <div className="max-w-2xl mx-auto px-4">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <Link to="/dashboard" className="flex items-center space-x-2 text-accent hover:text-accent/80 transition-colors">
-              <ArrowLeft className="w-5 h-5" />
-              <span>Volver</span>
-            </Link>
-            <h1 className="text-2xl font-bold">Test Inicial Completado</h1>
-            <div className="w-10" /> {/* Spacer */}
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <header className="bg-gradient-hero relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-transparent" />
+          <div className="relative z-10 container mx-auto px-6 py-4">
+            <div className="flex items-center justify-between">
+              <Link to="/dashboard">
+                <Button variant="outline" size="sm" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Volver
+                </Button>
+              </Link>
+              <h1 className="text-2xl font-bold text-white">Test Inicial Completado</h1>
+              <div className="w-10" /> {/* Spacer */}
+            </div>
           </div>
+        </header>
 
-          {/* Results Card */}
-          <Card className="medical-card">
-            <CardContent className="p-8">
-              <div className="text-center space-y-6">
-                <CheckCircle className="w-16 h-16 text-success mx-auto" />
-                
-                <div>
-                  <h2 className="text-3xl font-bold text-success mb-2">¡Excelente!</h2>
-                  <p className="text-muted-foreground">Has completado el test inicial</p>
-                </div>
+        <div className="bg-gray-50/30 py-8">
+          <div className="max-w-2xl mx-auto px-4">
+            {/* Results Card */}
+            <Card className="medical-card">
+              <CardContent className="p-8">
+                <div className="text-center space-y-6">
+                  <CheckCircle className="w-16 h-16 text-success mx-auto" />
 
-                <div className="bg-accent/10 p-6 rounded-lg border border-accent/20">
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Puntuación</p>
-                      <p className="text-3xl font-bold text-accent">{score}/{questions.length}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Precisión</p>
-                      <p className="text-3xl font-bold text-accent">{accuracy}%</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Preguntas</p>
-                      <p className="text-3xl font-bold text-accent">{questions.length}</p>
+                  <div>
+                    <h2 className="text-3xl font-bold text-success mb-2">¡Excelente!</h2>
+                    <p className="text-muted-foreground">Has completado el test inicial</p>
+                  </div>
+
+                  <div className="bg-primary/10 p-6 rounded-lg border border-primary/20">
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">Puntuación</p>
+                        <p className="text-3xl font-bold text-primary">{score}/{questions.length}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">Precisión</p>
+                        <p className="text-3xl font-bold text-primary">{accuracy}%</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">Preguntas</p>
+                        <p className="text-3xl font-bold text-primary">{questions.length}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="pt-4 space-y-3">
-                  <p className="text-sm text-muted-foreground">
-                    Este es tu test diagnóstico. Usa los resultados para identificar áreas de mejora.
-                  </p>
-                </div>
+                  <div className="pt-4 space-y-3">
+                    <p className="text-sm text-muted-foreground">
+                      Este es tu test diagnóstico inicial. Se te ha asignado un nivel de habilidad basado en tu desempeño.
+                    </p>
+                  </div>
 
-                <div className="flex gap-4 pt-4">
-                  <Button 
-                    onClick={handleRestartTest}
-                    variant="outline"
-                    className="flex-1"
-                  >
-                    <RotateCcw className="w-4 h-4 mr-2" />
-                    Repetir Test
-                  </Button>
-                  <Button 
-                    onClick={() => navigate("/practice")}
-                    className="flex-1"
-                  >
-                    Ir a Práctica
-                  </Button>
+                  <div className="flex gap-4 pt-4">
+                    <Button
+                      onClick={() => navigate("/dashboard")}
+                      variant="outline"
+                      className="flex-1"
+                    >
+                      <ArrowLeft className="w-4 h-4 mr-2" />
+                      Volver al Dashboard
+                    </Button>
+                    <Button
+                      onClick={handleSubmitInitialTest}
+                      className="flex-1"
+                    >
+                      Comenzar Práctica
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     );
@@ -260,27 +292,36 @@ const InitialTest = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <Link to="/dashboard" className="flex items-center space-x-2 text-accent hover:text-accent/80 transition-colors">
-            <ArrowLeft className="w-5 h-5" />
-            <span>Volver</span>
-          </Link>
-          <h1 className="text-2xl font-bold">Test Inicial</h1>
-          <div className="text-right">
-            <p className="text-sm text-muted-foreground">Pregunta {currentQuestion + 1} de {questions.length}</p>
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="bg-gradient-hero relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-transparent" />
+        <div className="relative z-10 container mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <Link to="/dashboard">
+              <Button variant="outline" size="sm" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Volver
+              </Button>
+            </Link>
+            <h1 className="text-2xl font-bold text-white">Test Inicial</h1>
+            <div className="text-right">
+              <p className="text-sm text-white/90">Pregunta {currentQuestion + 1} de {questions.length}</p>
+            </div>
           </div>
         </div>
+      </header>
 
-        {/* Progress Bar */}
-        <div className="mb-8">
-          <Progress value={progress} className="h-2" />
-        </div>
+      <div className="bg-gray-50/30 py-8">
+        <div className="max-w-4xl mx-auto px-4">
+
+          {/* Progress Bar */}
+          <div className="mb-8">
+            <Progress value={progress} className="h-2" />
+          </div>
 
         {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Question and Image */}
           <div className="lg:col-span-2 space-y-6">
             <Card className="medical-card">
@@ -307,13 +348,13 @@ const InitialTest = () => {
                       key={idx}
                       onClick={() => handleAnswerSelect(idx)}
                       disabled={showFeedback}
-                      className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
-                        selectedAnswer === idx
-                          ? "border-accent bg-accent/10"
-                          : "border-border hover:border-accent/50"
+                      className={`w-full p-4 rounded-lg border-2 transition-all text-left font-medium ${
+                        selectedAnswer === idx && !showFeedback
+                          ? "border-primary bg-primary/15 text-primary"
+                          : "border-border hover:border-primary/50"
                       } ${
                         showFeedback && idx === answerFeedback?.correct_answer
-                          ? "border-success bg-success/10"
+                          ? "border-green-500 bg-green-50 text-green-800"
                           : ""
                       } ${
                         showFeedback && selectedAnswer === idx && !answerFeedback?.is_correct
@@ -337,14 +378,14 @@ const InitialTest = () => {
           {/* Right Sidebar - Feedback/Stats */}
           <div className="space-y-6">
             {/* Score Card */}
-            <Card className="medical-card bg-gradient-to-br from-accent/5 to-primary/5">
+            <Card className="medical-card bg-gradient-to-br from-primary/5 to-primary/10">
               <CardHeader>
                 <CardTitle className="text-sm">Progreso</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-center">
-                  <p className="text-3xl font-bold text-accent mb-2">{score}</p>
-                  <p className="text-sm text-muted-foreground">respuestas correctas</p>
+                  <p className="text-3xl font-bold text-primary mb-2">{score}</p>
+                  <p className="text-sm text-foreground/70">respuestas correctas</p>
                 </div>
               </CardContent>
             </Card>
@@ -385,18 +426,19 @@ const InitialTest = () => {
               <Button 
                 onClick={handleSubmitAnswer}
                 disabled={selectedAnswer === null}
-                className="w-full"
+                className="w-full bg-gradient-hero text-white hover:opacity-90"
               >
                 Verificar Respuesta
               </Button>
             ) : (
               <Button 
                 onClick={handleNextQuestion}
-                className="w-full"
+                className="w-full bg-gradient-hero text-white hover:opacity-90"
               >
                 {currentQuestion === questions.length - 1 ? "Ver Resultados" : "Siguiente Pregunta"}
               </Button>
             )}
+          </div>
           </div>
         </div>
       </div>

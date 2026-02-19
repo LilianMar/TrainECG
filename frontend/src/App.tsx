@@ -10,9 +10,12 @@ import Dashboard from "./pages/Dashboard";
 import ClassifyECG from "./pages/ClassifyECG";
 import PracticeMode from "./pages/PracticeMode";
 import InitialTest from "./pages/InitialTest";
+import PostPracticeTest from "./pages/PostPracticeTest";
 import Progress from "./pages/Progress";
 import Profile from "./pages/Profile";
+import Library from "./pages/Library";
 import NotFound from "./pages/NotFound";
+import FloatingChatbot from "./components/FloatingChatbot";
 
 const queryClient = new QueryClient();
 
@@ -32,11 +35,12 @@ const App = () => (
           <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/test" element={<ProtectedRoute><InitialTest /></ProtectedRoute>} />
-          {/* Placeholder routes */}
-          <Route path="/library" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/test-evaluation" element={<ProtectedRoute><PostPracticeTest /></ProtectedRoute>} />
+          <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
           {/* Catch-all route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <FloatingChatbot />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

@@ -25,6 +25,11 @@ class UserProgress(Base):
     practice_accuracy = Column(Float, default=0.0, nullable=False)
     total_practice_correct = Column(Integer, default=0, nullable=False)
     
+    # Post-practice test tracking
+    post_practice_tests_taken = Column(Integer, default=0, nullable=False)
+    post_practice_score = Column(Float, nullable=True)  # Score from last post-practice test
+    post_practice_level_achieved = Column(Integer, nullable=True)  # Level achieved after post-practice test
+    
     # Streak and engagement
     current_streak_days = Column(Integer, default=0, nullable=False)
     longest_streak_days = Column(Integer, default=0, nullable=False)

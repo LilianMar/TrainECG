@@ -2,7 +2,11 @@
 ECG Insight Mentor Backend - Main package.
 """
 
-from app.main import app
-
 __version__ = "1.0.0"
-__all__ = ["app"]
+
+# Import app only when needed (avoid circular imports in scripts)
+try:
+    from app.main import app
+    __all__ = ["app"]
+except ImportError:
+    __all__ = []

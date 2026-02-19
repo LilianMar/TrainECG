@@ -182,19 +182,20 @@ const PracticeMode = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-6 py-8">
-        {/* Progress Bar */}
-        <Card className="medical-card mb-6">
-          <CardContent className="p-6">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-medium">Progreso</span>
-              <span className="text-sm text-muted-foreground">
-                Puntuación: {score}/{questions.length}
-              </span>
-            </div>
-            <Progress value={progress} className="w-full" />
-          </CardContent>
-        </Card>
+      <main className="bg-gray-50/30 py-8">
+        <div className="container mx-auto px-6">
+          {/* Progress Bar */}
+          <Card className="medical-card mb-6">
+            <CardContent className="p-6">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-medium">Progreso</span>
+                <span className="text-sm text-muted-foreground">
+                  Puntuación: {score}/{questions.length}
+                </span>
+              </div>
+              <Progress value={progress} className="w-full" />
+            </CardContent>
+          </Card>
 
         {isLoadingQuestions ? (
           <Card className="medical-card">
@@ -371,6 +372,7 @@ const PracticeMode = () => {
           </div>
           </div>
         )}
+        </div>
       </main>
     </div>
   );

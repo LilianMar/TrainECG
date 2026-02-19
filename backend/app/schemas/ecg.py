@@ -66,10 +66,22 @@ class PracticeAnswerResponse(BaseModel):
     is_correct: bool
     correct_answer: int
     explanation: str
-    correct_class: ArrhythmiaClassEnum
+    correct_class: str
 
 
 class PracticeQuestionList(BaseModel):
     """Schema for returning multiple practice questions."""
     total: int
     questions: List[PracticeQuestionResponse]
+
+class PostPracticeTestRequest(BaseModel):
+    """Schema for post-practice test submission."""
+    answers: List[dict]  # List of {question_id, selected_answer, time_spent_seconds}
+
+
+class RecommendationResponse(BaseModel):
+    """Schema for learning recommendations response."""
+    success: bool
+    recommendations: str  # HTML formatted recommendations
+    arrhythmias_to_review: List[str]
+    progress: dict  # {previous_level, current_level, improved}

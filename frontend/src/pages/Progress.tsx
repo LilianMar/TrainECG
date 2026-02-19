@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ArrowLeft, TrendingUp, Target, Zap, Award } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,7 @@ const Progress = () => {
     total_practice_correct: number;
     current_streak_days: number;
     longest_streak_days: number;
+    skill_level?: number | null;
   } | null>(null);
   const [progression, setProgression] = useState<ProgressionData[]>([]);
   const [testAttempts, setTestAttempts] = useState<TestAttempt[]>([]);
@@ -73,57 +74,77 @@ const Progress = () => {
 
 
 
+  const loadProgress = useCallback(async () => {
+    try {
+      const data = await apiRequest<typeof progressData>("/progress");
+      if (data) {
+        setProgressData(data);
+      }
+
+      const progressionResponse = await apiRequest<{ progression: ProgressionData[] }>(
+        "/progress/progression"
+      );
+      if (progressionResponse.progression) {
+        setProgression(progressionResponse.progression);
+      }
+
+      const testResponse = await apiRequest<{ test_attempts: TestAttempt[] }>(
+        "/progress/test-attempts"
+      );
+      if (testResponse.test_attempts) {
+        setTestAttempts(testResponse.test_attempts);
+      }
+
+      const statsResponse = await apiRequest<{ arrhythmia_stats: Record<string, { correct: number; total: number; accuracy: number }> }>(
+        "/progress/stats/by-arrhythmia"
+      );
+      const stats = Object.entries(statsResponse.arrhythmia_stats || {}).map(
+        ([name, stat]) => ({
+          name,
+          correct: stat.correct,
+          total: stat.total,
+          accuracy: stat.accuracy,
+        })
+      );
+      setArrhythmiaStats(stats);
+
+      const recommendationsResponse = await apiRequest<{ recommendations: Array<{ type: string; arrhythmia: string; accuracy: number; message: string }> }>(
+        "/progress/recommendations"
+      );
+      setRecommendations(recommendationsResponse.recommendations ?? []);
+
+      const badgesResponse = await apiRequest<{ earned_badges: Badge[] }>(
+        "/achievements"
+      );
+      setBadges(badgesResponse.earned_badges ?? []);
+    } catch {
+      // Keep placeholders if API is unavailable
+    }
+  }, []);
+
   useEffect(() => {
-    const loadProgress = async () => {
-      try {
-        const data = await apiRequest<typeof progressData>("/progress");
-        if (data) {
-          setProgressData(data);
-        }
+    loadProgress();
+  }, [loadProgress]);
 
-        const progressionResponse = await apiRequest<{ progression: ProgressionData[] }>(
-          "/progress/progression"
-        );
-        if (progressionResponse.progression) {
-          setProgression(progressionResponse.progression);
-        }
+  useEffect(() => {
+    const handleRefresh = () => {
+      loadProgress();
+    };
 
-        const testResponse = await apiRequest<{ test_attempts: TestAttempt[] }>(
-          "/progress/test-attempts"
-        );
-        if (testResponse.test_attempts) {
-          setTestAttempts(testResponse.test_attempts);
-        }
-
-        const statsResponse = await apiRequest<{ arrhythmia_stats: Record<string, { correct: number; total: number; accuracy: number }> }>(
-          "/progress/stats/by-arrhythmia"
-        );
-        const stats = Object.entries(statsResponse.arrhythmia_stats || {}).map(
-          ([name, stat]) => ({
-            name,
-            correct: stat.correct,
-            total: stat.total,
-            accuracy: stat.accuracy,
-          })
-        );
-        setArrhythmiaStats(stats);
-
-        const recommendationsResponse = await apiRequest<{ recommendations: Array<{ type: string; arrhythmia: string; accuracy: number; message: string }> }>(
-          "/progress/recommendations"
-        );
-        setRecommendations(recommendationsResponse.recommendations ?? []);
-
-        const badgesResponse = await apiRequest<{ earned_badges: Badge[] }>(
-          "/achievements"
-        );
-        setBadges(badgesResponse.earned_badges ?? []);
-      } catch {
-        // Keep placeholders if API is unavailable
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        loadProgress();
       }
     };
 
-    loadProgress();
-  }, []);
+    window.addEventListener("focus", handleRefresh);
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      window.removeEventListener("focus", handleRefresh);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [loadProgress]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -143,9 +164,10 @@ const Progress = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-6 py-8">
-        {/* Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <main className="bg-gray-50/30 py-8">
+        <div className="container mx-auto px-6">
+          {/* Overview Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card className="medical-card">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -195,6 +217,20 @@ const Progress = () => {
               </div>
             </CardContent>
           </Card>
+
+          {progressData?.skill_level && (
+            <Card className="medical-card bg-gradient-to-br from-primary/5 to-primary/10">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Tu Nivel Actual</p>
+                    <p className="text-2xl font-bold text-primary">{progressData.skill_level}/5</p>
+                  </div>
+                  <TrendingUp className="w-8 h-8 text-primary" />
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -360,6 +396,7 @@ const Progress = () => {
               </div>
           </CardContent>
         </Card>
+        </div>
       </main>
     </div>
   );

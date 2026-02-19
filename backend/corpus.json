@@ -1,0 +1,585 @@
+{
+  "corpus": [
+    {
+      "id": 1,
+      "categoria": "definiciones_basicas",
+      "pregunta": "qué es una arritmia cardiaca",
+      "respuesta": "Una arritmia es una alteración del ritmo normal del corazón. Puede ser: taquicardia (demasiado rápido, >100 lpm), bradicardia (demasiado lento, <60 lpm) o ritmo irregular. Se origina por problemas en el sistema eléctrico del corazón."
+    },
+    {
+      "id": 2,
+      "categoria": "definiciones_basicas",
+      "pregunta": "cuáles son los tipos de arritmias",
+      "respuesta": "Arritmias supraventriculares (origen en las aurículas): fibrilación auricular, flutter, taquicardia paroxística. Arritmias ventriculares (origen en los ventrículos): taquicardia ventricular, fibrilación ventricular. Bradiarritmias: bloqueos AV, disfunción del nodo sinusal."
+    },
+    {
+      "id": 3,
+      "categoria": "definiciones_basicas",
+      "pregunta": "qué es el sistema de conducción cardiaca",
+      "respuesta": "Sistema eléctrico del corazón: Nodo sinoauricular (marcapasos natural) → Nodo AV → Haz de His → Ramas derecha/izquierda → Fibras de Purkinje. Genera y transmite impulsos eléctricos para la contracción cardiaca coordinada."
+    },
+    {
+      "id": 4,
+      "categoria": "definiciones_basicas",
+      "pregunta": "diferencia entre taquicardia y bradicardia",
+      "respuesta": "Taquicardia: frecuencia cardiaca >100 latidos por minuto en reposo. Bradicardia: frecuencia cardiaca <60 lpm. Ambas pueden ser fisiológicas (ej. los deportistas tienen bradicardia) o patológicas (requieren tratamiento)."
+    },
+    {
+      "id": 5,
+      "categoria": "definiciones_basicas",
+      "pregunta": "qué causa las arritmias",
+      "respuesta": "Causas: cardiopatía isquémica (infarto), hipertensión, valvulopatías, miocardiopatías, trastornos electrolíticos (K+, Mg2+), fármacos, alcohol, cafeína, estrés, síndrome de QT largo, canalopatías congénitas."
+    },
+    {
+      "id": 6,
+      "categoria": "fibrilacion_auricular",
+      "pregunta": "qué es la fibrilación auricular",
+      "respuesta": "FA: arritmia supraventricular más frecuente. Actividad eléctrica auricular caótica (350-600 despolarizaciones/min) sin contracción efectiva. ECG: ausencia de ondas P, ritmo ventricular irregular, intervalos RR variables. Riesgo: tromboembolismo, ictus."
+    },
+    {
+      "id": 7,
+      "categoria": "fibrilacion_auricular",
+      "pregunta": "cómo se ve la fibrilación auricular en el ecg",
+      "respuesta": "FA en ECG: 1) Ausencia de ondas P normales, 2) Ondas fibrilatorias (oscilaciones irregulares de la línea basal), 3) Respuesta ventricular irregular (intervalos RR variables), 4) QRS generalmente estrecho (<120 ms)."
+    },
+    {
+      "id": 8,
+      "categoria": "fibrilacion_auricular",
+      "pregunta": "tratamiento de la fibrilación auricular",
+      "respuesta": "FA estable: control de frecuencia (betabloqueantes: metoprolol 25-100 mg, antagonistas del calcio: diltiazem 120-360 mg) o control del ritmo (cardioversión eléctrica/farmacológica). Anticoagulación según CHA2DS2-VASc ≥2 (mujeres) o ≥1 (hombres): ACODs (apixabán, rivaroxabán)."
+    },
+    {
+      "id": 9,
+      "categoria": "fibrilacion_auricular",
+      "pregunta": "score chadvasc fibrilación auricular",
+      "respuesta": "CHA2DS2-VASc predice riesgo tromboembólico en FA: ICC (1p), HTA (1p), Edad ≥75 (2p), Diabetes (1p), Ictus previo (2p), Enfermedad vascular (1p), Edad 65-74 (1p), Sexo femenino (1p). Puntuación ≥2 (mujer) o ≥1 (hombre): anticoagular."
+    },
+    {
+      "id": 10,
+      "categoria": "fibrilacion_auricular",
+      "pregunta": "cardioversión en fibrilación auricular",
+      "respuesta": "Cardioversión eléctrica: choque sincronizado 100-200 J bifásico bajo sedación. Indicaciones: FA <48h con inestabilidad hemodinámica, FA sintomática refractaria. Requisito: 3 semanas de anticoagulación previa o ETE negativo para trombo auricular."
+    },
+    {
+      "id": 11,
+      "categoria": "taquicardia_ventricular",
+      "pregunta": "qué es la taquicardia ventricular",
+      "respuesta": "TV: ≥3 latidos ventriculares consecutivos, FC >100 lpm. ECG: QRS ancho (>120 ms), disociación AV. TV sostenida (>30s): emergencia. Monomórfica (QRS idénticos) vs polimórfica (QRS variables). Puede degenerar en fibrilación ventricular."
+    },
+    {
+      "id": 12,
+      "categoria": "taquicardia_ventricular",
+      "pregunta": "ecg de taquicardia ventricular",
+      "respuesta": "TV en ECG: 1) QRS >120 ms (>140 ms muy sugestivo), 2) FC 100-250 lpm, 3) Desviación del eje eléctrico, 4) Disociación AV (ondas P independientes), 5) Latidos de captura/fusión (diagnósticos), 6) Morfología QRS con concordancia precordial."
+    },
+    {
+      "id": 13,
+      "categoria": "taquicardia_ventricular",
+      "pregunta": "tratamiento de taquicardia ventricular",
+      "respuesta": "TV sin pulso: desfibrilación inmediata 200 J, RCP, adrenalina 1 mg cada 3-5 min, amiodarona 300 mg IV. TV estable: amiodarona 150 mg IV en 10 min o cardioversión sincronizada 100-200 J. TV recurrente: ablación con catéter, DAI (desfibrilador implantable)."
+    },
+    {
+      "id": 14,
+      "categoria": "taquicardia_ventricular",
+      "pregunta": "torsades de pointes",
+      "respuesta": "Torsades: TV polimórfica con QRS que 'gira' alrededor de la línea basal. Causa: QT prolongado (QTc >500 ms). Desencadenantes: hipopotasemia, hipomagnesemia, fármacos (antiarrítmicos IA/III). Tratamiento: sulfato de magnesio 2 g IV, corregir electrolitos, marcapasos temporal."
+    },
+    {
+      "id": 15,
+      "categoria": "taquicardia_ventricular",
+      "pregunta": "tratamiento de la fibrilación ventricular",
+      "respuesta": "FV: máxima emergencia, ritmo caótico sin pulso. Tratamiento: desfibrilación no sincronizada inmediata 200 J bifásica, RCP de alta calidad (100-120 compresiones/min, profundidad 5-6 cm), adrenalina 1 mg IV cada 3-5 min, amiodarona 300→150 mg IV, manejo de vía aérea."
+    },
+    {
+      "id": 16,
+      "categoria": "bloqueos_av",
+      "pregunta": "qué es el bloqueo auriculoventricular",
+      "respuesta": "Bloqueo AV: alteración en la conducción auriculoventricular. Grados: 1° (PR >200 ms), 2° Mobitz I (Wenckebach: PR progresivo hasta bloqueo), 2° Mobitz II (PR fijo con bloqueos intermitentes), 3° (disociación AV completa, frecuencia ventricular 20-40 lpm)."
+    },
+    {
+      "id": 17,
+      "categoria": "bloqueos_av",
+      "pregunta": "ecg bloqueo av completo",
+      "respuesta": "Bloqueo AV 3° en ECG: 1) Ondas P regulares (60-100/min), 2) QRS regulares pero independientes (20-40/min si escape ventricular), 3) Sin PR constante (disociación AV), 4) Frecuencia auricular > frecuencia ventricular, 5) QRS ancho si escape ventricular."
+    },
+    {
+      "id": 18,
+      "categoria": "bloqueos_av",
+      "pregunta": "cuándo implantar un marcapasos",
+      "respuesta": "Indicaciones clase I de marcapasos: bloqueo AV 3° sintomático, Mobitz II de 2° grado, bradicardia sintomática con pausas >3s, FA con respuesta lenta sintomática <40 lpm, disfunción sinusal sintomática. Marcapasos bicameral (DDD) de preferencia."
+    },
+    {
+      "id": 19,
+      "categoria": "bloqueos_av",
+      "pregunta": "síndrome del seno enfermo",
+      "respuesta": "Disfunción del nodo sinusal: bradicardia sinusal <40 lpm, pausas sinusales >3s, bloqueo sinoauricular, síndrome bradicardia-taquicardia (alternancia de bradicardia con FA). Síntomas: mareos, síncope, fatiga. Tratamiento: marcapasos si sintomático."
+    },
+    {
+      "id": 20,
+      "categoria": "bloqueos_av",
+      "pregunta": "bloqueo av mobitz tipo 2",
+      "respuesta": "Mobitz II: bloqueo AV 2° con PR constante y QRS que cae de forma intermitente (relación 2:1, 3:1). ECG: PR fijo, QRS súbitamente ausente. Alto riesgo de progresión a bloqueo AV completo. Indicación clase I de marcapasos. Más grave que Mobitz I (Wenckebach)."
+    },
+    {
+      "id": 21,
+      "categoria": "canalopatias",
+      "pregunta": "síndrome de qt largo",
+      "respuesta": "SQTL: canalopatía congénita/adquirida. QTc prolongado (>470 ms mujeres, >450 ms hombres). Riesgo de torsades de pointes, síncope, muerte súbita. Causas: mutaciones genéticas (LQT1-3), fármacos (antiarrítmicos, antibióticos), electrolitos. Tratamiento: betabloqueantes, evitar fármacos que prolonguen QT, DAI."
+    },
+    {
+      "id": 22,
+      "categoria": "canalopatias",
+      "pregunta": "síndrome de brugada",
+      "respuesta": "Brugada: canalopatía de sodio (SCN5A). ECG tipo 1: elevación del ST ≥2 mm en V1-V3 con morfología en 'coved' seguida de onda T negativa. Riesgo: FV nocturna, muerte súbita. Tratamiento: DAI en alto riesgo, evitar antiarrítmicos clase I, la fiebre aumenta el riesgo."
+    },
+    {
+      "id": 23,
+      "categoria": "canalopatias",
+      "pregunta": "síndrome de wolff parkinson white",
+      "respuesta": "WPW: vía accesoria (haz de Kent) que conecta aurículas y ventrículos puenteando el nodo AV. ECG: PR corto (<120 ms), onda delta (inicio empastado del QRS), QRS ancho. Complicación: taquicardia reentrante AV, FA con conducción rápida (riesgo de FV). Tratamiento: ablación de la vía accesoria."
+    },
+    {
+      "id": 24,
+      "categoria": "canalopatias",
+      "pregunta": "ecg síndrome de brugada",
+      "respuesta": "ECG Brugada tipo 1 (diagnóstico): elevación del punto J ≥2 mm en V1-V3, ST descendente, onda T negativa, patrón 'coved' o 'saddleback'. Tipos 2-3 (no diagnósticos): ST en silla de montar. Test de provocación: ajmalina/flecainida IV revela el patrón."
+    },
+    {
+      "id": 25,
+      "categoria": "canalopatias",
+      "pregunta": "taquicardia catecolaminérgica",
+      "respuesta": "TVPC: canalopatía (RyR2, CASQ2). TV/FV inducida por ejercicio/estrés en corazón estructuralmente normal. ECG en reposo normal. Tratamiento: betabloqueantes a altas dosis (nadolol, propranolol), evitar ejercicio competitivo, DAI si síncope o paro previo."
+    },
+    {
+      "id": 26,
+      "categoria": "diagnostico",
+      "pregunta": "cómo se diagnostican las arritmias",
+      "respuesta": "Diagnóstico: ECG de 12 derivaciones, Holter 24-48h (detecta arritmias intermitentes), monitor de eventos (registro en momento del síntoma), estudio electrofisiológico (mapeo intracardiaco), ecocardiograma (cardiopatía estructural), prueba de esfuerzo (arritmias inducidas por ejercicio)."
+    },
+    {
+      "id": 27,
+      "categoria": "diagnostico",
+      "pregunta": "qué es la ablación con catéter",
+      "respuesta": "Ablación: procedimiento invasivo que elimina tejido arritmogénico. Acceso venoso/arterial, mapeo electrofisiológico, aplicación de energía (radiofrecuencia 50-60°C o crioablación −80°C). Éxito >90% para TPSV/flutter, 60-80% para FA. Complicaciones <1%: taponamiento, ictus."
+    },
+    {
+      "id": 28,
+      "categoria": "diagnostico",
+      "pregunta": "desfibrilador cardioversor implantable",
+      "respuesta": "DAI: dispositivo subcutáneo que detecta y trata FV/TV. Cables endocárdicos en ventrículo derecho. Terapias: cardioversión sincronizada (taquicardia), desfibrilación (fibrilación), estimulación antibradiarrítmica. Indicaciones: prevención secundaria (post-paro), primaria (FEVI <35%, canalopatías)."
+    },
+    {
+      "id": 29,
+      "categoria": "diagnostico",
+      "pregunta": "prueba de la mesa basculante",
+      "respuesta": "Test de mesa basculante: evalúa síncope mediado neuralmente/vasovagal. Paciente inclinado 60-70° durante 20-45 min. Monitoriza TA y FC. Positivo: hipotensión/bradicardia con síncope. Indica síncope reflejo (no arrítmico). Tratamiento: medidas de estilo de vida, fludrocortisona, midodrina si recurrente."
+    },
+    {
+      "id": 30,
+      "categoria": "diagnostico",
+      "pregunta": "estudio electrofisiológico",
+      "respuesta": "EEF: procedimiento diagnóstico/terapéutico invasivo. Catéteres por vena femoral hasta cavidades cardiacas. Registra electrogramas intracardiacos, la estimulación programada induce arritmias, el mapeo 3D localiza el origen. Indicaciones: síncope inexplicado, taquicardias, pre-ablación. Duración 1-3 h."
+    },
+    {
+      "id": 31,
+      "categoria": "farmacos",
+      "pregunta": "clases de antiarrítmicos vaughan williams",
+      "respuesta": "Clase I (bloqueantes de sodio): IA quinidina, IB lidocaína, IC flecainida. Clase II: betabloqueantes (metoprolol). Clase III: prolongan la repolarización (amiodarona, sotalol). Clase IV: antagonistas del calcio (verapamilo, diltiazem). Otros: adenosina, digoxina."
+    },
+    {
+      "id": 32,
+      "categoria": "farmacos",
+      "pregunta": "indicaciones y dosis de amiodarona",
+      "respuesta": "Amiodarona: antiarrítmico clase III multicanal. Indicaciones: FA, flutter, TV. Dosis aguda: 150 mg IV en 10 min, luego 1 mg/min durante 6 h. Oral: carga 600-800 mg/día 1-2 semanas, mantenimiento 200 mg/día. Efectos adversos: toxicidad tiroidea, pulmonar, hepática, fotosensibilidad."
+    },
+    {
+      "id": 33,
+      "categoria": "farmacos",
+      "pregunta": "adenosina para taquicardia",
+      "respuesta": "Adenosina: nucleósido que bloquea transitoriamente el nodo AV. Indicación: TPSV reentrante AV. Dosis: 6 mg IV rápido, si no responde 12 mg ×2. Efecto: asistolia breve (2-3 s), termina la taquicardia. Contraindicaciones: asma (broncoespasmo), bloqueo AV, FA con WPW. Vida media <10 s."
+    },
+    {
+      "id": 34,
+      "categoria": "farmacos",
+      "pregunta": "betabloqueantes en arritmias",
+      "respuesta": "Betabloqueantes: bloquean receptores betaadrenérgicos. Indicaciones: control de FC en FA/flutter, TPSV, TV catecolaminérgica, post-infarto, miocardiopatías. Ejemplos: metoprolol 25-100 mg/12h, bisoprolol 2,5-10 mg/día, carvedilol 6,25-25 mg/12h. Contraindicaciones: asma grave, bloqueo AV avanzado, bradicardia."
+    },
+    {
+      "id": 35,
+      "categoria": "farmacos",
+      "pregunta": "mecanismo y uso de digoxina",
+      "respuesta": "Digoxina: glucósido cardiaco, inhibe la bomba Na-K-ATPasa, aumenta el calcio intracelular. Efecto: inotropismo positivo, cronotropismo negativo. Uso: control de FC en FA (segunda línea), IC con FA. Dosis: 0,125-0,25 mg/día. Rango terapéutico estrecho (0,5-2 ng/ml), riesgo de toxicidad (náuseas, arritmias)."
+    },
+    {
+      "id": 36,
+      "categoria": "ecg_basico",
+      "pregunta": "qué miden las ondas del ecg",
+      "respuesta": "Onda P: despolarización auricular. Intervalo PR: conducción auriculoventricular (normal 120-200 ms). Complejo QRS: despolarización ventricular (normal <120 ms). Segmento ST: fase plateau ventricular. Onda T: repolarización ventricular. Intervalo QT: sístole eléctrica ventricular total."
+    },
+    {
+      "id": 37,
+      "categoria": "ecg_basico",
+      "pregunta": "cómo calcular la frecuencia cardiaca en el ecg",
+      "respuesta": "Método rápido: 300 dividido entre el número de cuadros grandes entre dos ondas R consecutivas (a 25 mm/s). Método exacto: 1500 dividido entre el número de cuadros pequeños entre dos ondas R. Para ritmos irregulares: contar latidos en 6 segundos y multiplicar por 10."
+    },
+    {
+      "id": 38,
+      "categoria": "ecg_basico",
+      "pregunta": "qué es un ecg normal",
+      "respuesta": "ECG normal: ritmo sinusal regular (60-100 lpm), onda P positiva en DII antes de cada QRS, PR 120-200 ms, QRS <120 ms, eje eléctrico entre -30° y +90°, ST isoeléctrico, onda T positiva en derivaciones laterales. Sin alteraciones del ritmo ni de la conducción."
+    },
+    {
+      "id": 39,
+      "categoria": "ecg_basico",
+      "pregunta": "qué es el eje eléctrico del corazón",
+      "respuesta": "El eje eléctrico representa la dirección predominante de la despolarización ventricular. Normal: entre -30° y +90°. Desviación izquierda (<-30°): bloqueo de rama izquierda, hipertrofia VI. Desviación derecha (>+90°): hipertrofia VD, TEP, EPOC. Se calcula con las derivaciones DI y aVF."
+    },
+    {
+      "id": 40,
+      "categoria": "ecg_basico",
+      "pregunta": "qué es el intervalo qt",
+      "respuesta": "Intervalo QT: tiempo desde el inicio del QRS hasta el final de la onda T. Representa la sístole eléctrica ventricular. Normal corregido (QTc por fórmula de Bazett): <440 ms hombres, <460 ms mujeres. QTc prolongado (>500 ms): riesgo de torsades de pointes y muerte súbita."
+    },
+    {
+      "id": 41,
+      "categoria": "ecg_basico",
+      "pregunta": "derivaciones del ecg y qué registran",
+      "respuesta": "12 derivaciones: Bipolares de extremidades (DI, DII, DIII): plano frontal. Unipolares aumentadas (aVR, aVL, aVF): plano frontal. Precordiales (V1-V6): plano horizontal. V1-V2: VD y septo. V3-V4: cara anterior. V5-V6 y DI, aVL: cara lateral. DII, DIII, aVF: cara inferior."
+    },
+    {
+      "id": 42,
+      "categoria": "flutter_auricular",
+      "pregunta": "qué es el flutter auricular",
+      "respuesta": "Flutter auricular: arritmia supraventricular por macrorreentrada auricular. Frecuencia auricular ~300 lpm (ondas F en 'dientes de sierra'). Conducción AV habitualmente 2:1, 3:1 o 4:1. FC ventricular típica: 150 lpm (bloqueo 2:1). ECG: ondas F negativas en DII, DIII, aVF; positivas en V1."
+    },
+    {
+      "id": 43,
+      "categoria": "flutter_auricular",
+      "pregunta": "diferencia entre flutter y fibrilación auricular",
+      "respuesta": "Flutter: ritmo auricular regular (~300 lpm), ondas F en dientes de sierra, respuesta ventricular regular. FA: ritmo auricular caótico (350-600 lpm), línea basal irregular sin ondas P, respuesta ventricular completamente irregular. Ambos tienen riesgo tromboembólico y requieren anticoagulación."
+    },
+    {
+      "id": 44,
+      "categoria": "flutter_auricular",
+      "pregunta": "tratamiento del flutter auricular",
+      "respuesta": "Flutter auricular: control de frecuencia (betabloqueantes, verapamilo). Cardioversión eléctrica muy eficaz con baja energía (50-100 J). Ablación del istmo cavotricuspídeo: curación >95%, tratamiento de elección definitivo. Anticoagulación igual que FA según riesgo tromboembólico."
+    },
+    {
+      "id": 45,
+      "categoria": "taquicardias_supraventriculares",
+      "pregunta": "qué es la taquicardia supraventricular paroxística",
+      "respuesta": "TPSV: taquicardia regular de inicio y fin bruscos, QRS estrecho, FC 150-250 lpm. Mecanismo: reentrada nodal AV (TRNAV, más frecuente) o reentrada AV (TRAV con vía accesoria). Síntomas: palpitaciones, mareo, disnea. Responde a maniobras vagales y adenosina."
+    },
+    {
+      "id": 46,
+      "categoria": "taquicardias_supraventriculares",
+      "pregunta": "maniobras vagales para taquicardia",
+      "respuesta": "Maniobras vagales: aumentan el tono vagal y bloquean el nodo AV. Tipos: maniobra de Valsalva (soplar contra resistencia), masaje del seno carotídeo (contraindicado en soplo carotídeo), inmersión facial en agua fría, compresión abdominal. Eficaces en TPSV, útiles en diagnóstico diferencial de otras taquicardias."
+    },
+    {
+      "id": 47,
+      "categoria": "taquicardias_supraventriculares",
+      "pregunta": "taquicardia auricular multifocal",
+      "respuesta": "TAM: taquicardia irregular con ≥3 morfologías distintas de onda P, FC >100 lpm. Causas: EPOC, cor pulmonale, hipopotasemia, hipomagnesemia, teofilina. ECG: morfologías de P cambiantes, PR variable, ritmo irregular. Tratamiento: corregir causa subyacente, verapamilo, metoprolol."
+    },
+    {
+      "id": 48,
+      "categoria": "marcapasos_errante",
+      "pregunta": "qué es el marcapasos auricular errante",
+      "respuesta": "Marcapasos auricular errante (MAE): el impulso cardiaco se desplaza entre el nodo sinusal y focos auriculares ectópicos. ECG: ≥3 morfologías distintas de onda P en la misma derivación, PR variable, FC normal (<100 lpm). Generalmente benigno, asociado a tono vagal alto o cardiopatía leve."
+    },
+    {
+      "id": 49,
+      "categoria": "extrasistoles",
+      "pregunta": "qué son las extrasístoles auriculares",
+      "respuesta": "Complejos auriculares prematuros (CAP): latidos ectópicos anticipados con onda P' de morfología diferente a la sinusal, seguidos de QRS estrecho normal y pausa compensadora incompleta. Muy frecuentes, habitualmente benignos. Causas: cafeína, estrés, tabaco. Tratamiento: solo si sintomáticos (betabloqueantes)."
+    },
+    {
+      "id": 50,
+      "categoria": "extrasistoles",
+      "pregunta": "qué son las extrasístoles ventriculares",
+      "respuesta": "Complejos ventriculares prematuros (CVP): latidos ectópicos anticipados con QRS ancho (>120 ms), morfología bizarra, sin onda P previa, onda T de polaridad opuesta al QRS y pausa compensadora completa. Frecuentes en población general. Preocupantes si: frecuentes (>10.000/día), en salvas, polimórficos o en cardiopatía estructural."
+    },
+    {
+      "id": 51,
+      "categoria": "extrasistoles",
+      "pregunta": "qué es el bigeminismo ventricular",
+      "respuesta": "Bigeminismo ventricular: patrón donde cada latido sinusal es seguido de un CVP de forma repetitiva (1 sinusal + 1 CVP). Trigeminismo: 2 sinusales + 1 CVP. Cuadrigeminismo: 3 sinusales + 1 CVP. Indica irritabilidad ventricular aumentada. Puede reducir la FC efectiva. Tratar causa subyacente."
+    },
+    {
+      "id": 52,
+      "categoria": "fibrilacion_ventricular",
+      "pregunta": "diferencia entre taquicardia ventricular y fibrilación ventricular",
+      "respuesta": "TV: ritmo ventricular rápido (>100 lpm) pero organizado, con complejos QRS anchos identificables. Puede haber pulso. FV: actividad eléctrica ventricular completamente desorganizada y caótica, sin complejos QRS definibles, sin pulso ni gasto cardiaco. Ambas son emergencias; la FV es inmediatamente fatal sin desfibrilación."
+    },
+    {
+      "id": 53,
+      "categoria": "asistolia",
+      "pregunta": "qué es la asistolia",
+      "respuesta": "Asistolia: ausencia total de actividad eléctrica cardiaca. ECG: línea isoeléctrica plana (o con ondas P ocasionales sin QRS). Ritmo de paro no desfibrilable. Tratamiento: RCP de alta calidad inmediata + adrenalina 1 mg IV cada 3-5 min + identificar causas reversibles (4H: hipoxia, hipovolemia, hipotermia, hipo/hiperpotasemia; 4T: neumotórax, taponamiento, TEP, tóxicos)."
+    },
+    {
+      "id": 54,
+      "categoria": "ritmo_idioventricular",
+      "pregunta": "qué es el ritmo idioventricular acelerado",
+      "respuesta": "Ritmo idioventricular acelerado (RIVA): ritmo ventricular de 40-120 lpm, QRS ancho, sin onda P o con disociación AV. Frecuente en reperfusión post-IAM (marcador de recanalización). Habitualmente autolimitado y bien tolerado. Diferencia con TV: FC <120 lpm y generalmente benigno. No suele requerir tratamiento."
+    },
+    {
+      "id": 55,
+      "categoria": "ecg_isquemia",
+      "pregunta": "cómo se ve un infarto en el ecg",
+      "respuesta": "IAM con elevación del ST (IAMCEST): elevación del ST ≥1 mm en ≥2 derivaciones contiguas (≥2 mm en precordiales). Evolución: hiperaguda (T picuda), aguda (ST elevado + T negativa), subaguda (onda Q patológica), crónica (onda Q + inversión T). Bloqueo de rama izquierda de nueva aparición equivale a IAMCEST."
+    },
+    {
+      "id": 56,
+      "categoria": "ecg_isquemia",
+      "pregunta": "qué es la onda q patológica",
+      "respuesta": "Onda Q patológica: signo de necrosis miocárdica. Criterios: duración >40 ms (1 mm de ancho) o amplitud >25% de la onda R siguiente. Aparece 6-24h tras el infarto y persiste indefinidamente. Localización: inferior (DII, DIII, aVF), anterior (V1-V4), lateral (DI, aVL, V5-V6). Indica infarto transmural previo."
+    },
+    {
+      "id": 57,
+      "categoria": "ecg_isquemia",
+      "pregunta": "qué significa el descenso del segmento st",
+      "respuesta": "Descenso del ST: signo de isquemia subendocárdica. Causas: angina de pecho (IAM sin elevación de ST), IAMSEST, respuesta normal al esfuerzo en prueba de esfuerzo (>1 mm), hipertrofia ventricular izquierda (ST descendente en V5-V6 con T negativa = 'strain pattern'), intoxicación digitálica (cubeta digitálica)."
+    },
+    {
+      "id": 58,
+      "categoria": "hipertrofia",
+      "pregunta": "criterios ecg de hipertrofia ventricular izquierda",
+      "respuesta": "HVI en ECG: criterio de Sokolow-Lyon: S en V1 + R en V5 o V6 >35 mm. Cornell: R aVL + S V3 >28 mm (♂) o >20 mm (♀). Criterio de voltaje de Lewis. Signos adicionales: eje izquierdo, R alta en aVL >11 mm, patrón de strain (ST descendente + T negativa en V5-V6). Sensibilidad 50%, especificidad 95%."
+    },
+    {
+      "id": 59,
+      "categoria": "bloqueos_rama",
+      "pregunta": "qué es el bloqueo de rama izquierda",
+      "respuesta": "BRI: QRS ≥120 ms, morfología RSR' o R amplia y empastada en V5-V6 y DI, patrón QS o rS en V1-V3, eje izquierdo. Causas: cardiopatía isquémica, HTA, miocardiopatía dilatada. BRI de nueva aparición en contexto de dolor torácico = equivalente de IAMCEST (tratamiento urgente). Impide valoración del ECG para isquemia."
+    },
+    {
+      "id": 60,
+      "categoria": "bloqueos_rama",
+      "pregunta": "qué es el bloqueo de rama derecha",
+      "respuesta": "BRD: QRS ≥120 ms, patrón RSR' ('orejas de conejo') en V1-V2, onda S ancha y empastada en DI, aVL, V5-V6. Causas: idiopático (frecuente), cardiopatía congénita, cor pulmonale, miocarditis. BRD incompleto: QRS 100-119 ms con misma morfología. Puede ser hallazgo normal. No impide valoración de isquemia."
+    },
+    {
+      "id": 61,
+      "categoria": "casos_clinicos",
+      "pregunta": "paciente con palpitaciones rápidas de inicio brusco qué sospechar",
+      "respuesta": "Inicio brusco + fin brusco en paciente joven sin cardiopatía: sospechar TPSV (reentrada nodal AV o reentrada AV). Si hay irregularidad: FA paroxística. Si hay antecedentes de cardiopatía estructural: TV hasta demostrar lo contrario. Evaluar con ECG durante el episodio. Primera medida: maniobras vagales."
+    },
+    {
+      "id": 62,
+      "categoria": "casos_clinicos",
+      "pregunta": "paciente con síncope y bradicardia qué pensar",
+      "respuesta": "Síncope + bradicardia: descartar bloqueo AV completo (ondas P sin relación con QRS, escape ventricular lento). Diferencial: disfunción sinusal (pausas sinusales), síncope vasovagal (bradicardia refleja), hipersensibilidad del seno carotídeo. Evaluar con ECG, Holter, test de mesa basculante. Marcapasos si bloqueo AV sintomático."
+    },
+    {
+      "id": 63,
+      "categoria": "casos_clinicos",
+      "pregunta": "paciente con infarto y taquicardia qrs ancho qué hacer",
+      "respuesta": "Taquicardia QRS ancho en contexto de IAM: asumir TV hasta demostrar lo contrario. Si inestable hemodinámicamente: cardioversión eléctrica sincronizada inmediata 100-200 J (o desfibrilación si sin pulso). Si estable: amiodarona 150 mg IV en 10 min. Nunca verapamilo en taquicardia QRS ancho de origen incierto (puede ser letal en TV)."
+    },
+    {
+      "id": 64,
+      "categoria": "casos_clinicos",
+      "pregunta": "paciente anciano con mareos y ecg con pr prolongado qué significa",
+      "respuesta": "PR prolongado (>200 ms): bloqueo AV de 1° grado. Por sí solo no causa síntomas. Si hay mareos, descartar: bloqueo AV 2° (Holter), disfunción sinusal. El bloqueo AV 1° en ancianos puede progresar. Causas frecuentes: degeneración del sistema de conducción, fármacos (betabloqueantes, calcioantagonistas, digoxina), enfermedad de Lyme."
+    },
+    {
+      "id": 65,
+      "categoria": "casos_clinicos",
+      "pregunta": "paciente joven con muerte súbita familiar y ecg con st elevado en v1 v2",
+      "respuesta": "ST elevado en V1-V2 con patrón 'coved' + historia familiar de muerte súbita: altamente sugestivo de síndrome de Brugada. Solicitar: genética (SCN5A), EEF para estratificación de riesgo, consulta con especialista. Indicar: evitar fiebre (usar antipiréticos precozmente), evitar fármacos bloqueantes de Na+ (flecainida, procainamida). DAI si alto riesgo."
+    },
+    {
+      "id": 66,
+      "categoria": "casos_clinicos",
+      "pregunta": "paciente con palpitaciones irregulares y ictus previo qué tratar",
+      "respuesta": "Palpitaciones irregulares + ictus previo: muy probable FA paroxística o persistente. Ictus previo = 2 puntos en CHA2DS2-VASc → anticoagulación obligatoria con ACOD (apixabán, rivaroxabán). ECG y Holter para confirmar FA. Ecocardiograma para descartar cardiopatía estructural. Valorar cardioversión o ablación."
+    },
+    {
+      "id": 67,
+      "categoria": "rcp_emergencias",
+      "pregunta": "pasos del soporte vital avanzado",
+      "respuesta": "SVA: 1) Confirmar paro cardiaco (sin pulso/respiración). 2) Iniciar RCP 30:2 de alta calidad. 3) Conectar monitor/desfibrilador. 4) Analizar ritmo: ¿desfibrilable? (FV/TV sin pulso → desfibrilar 200 J) o no desfibrilable (asistolia/AESP → continuar RCP). 5) Adrenalina 1 mg IV cada 3-5 min. 6) Amiodarona 300 mg IV tras 3ª descarga. 7) Identificar causas reversibles (4H/4T)."
+    },
+    {
+      "id": 68,
+      "categoria": "rcp_emergencias",
+      "pregunta": "cuándo usar cardioversión vs desfibrilación",
+      "respuesta": "Cardioversión sincronizada: taquicardia con pulso e inestabilidad hemodinámica (FA, flutter, TV). Sincronizada con la onda R para evitar FV. Energía: 100-200 J bifásico (FA), 50-100 J (flutter/TSV), 100-200 J (TV). Desfibrilación no sincronizada: FV o TV sin pulso (máxima emergencia). Energía: 200 J bifásico."
+    },
+    {
+      "id": 69,
+      "categoria": "rcp_emergencias",
+      "pregunta": "actividad eléctrica sin pulso",
+      "respuesta": "AESP (actividad eléctrica sin pulso): ritmo cardiaco organizado en ECG pero sin gasto cardiaco efectivo. No desfibrilable. Causas: 4H (hipoxia, hipovolemia, hipotermia, hipo/hiperpotasemia) y 4T (neumotórax a tensión, taponamiento cardiaco, TEP, tóxicos). Tratamiento: RCP + adrenalina + tratar causa. Pronóstico malo sin corrección de causa."
+    },
+    {
+      "id": 70,
+      "categoria": "prevencion_arritmias",
+      "pregunta": "cómo prevenir las arritmias",
+      "respuesta": "Prevención: control de factores de riesgo cardiovascular (HTA, diabetes, dislipidemia). Evitar alcohol excesivo, cafeína, tabaco. Ejercicio regular moderado. Tratar apnea del sueño (asociada a FA). Dieta mediterránea. Control del estrés. En cardiopatía estructural: tratamiento óptimo con IECAs, betabloqueantes. Seguimiento cardiológico regular."
+    },
+    {
+      "id": 71,
+      "categoria": "prevencion_arritmias",
+      "pregunta": "fármacos que prolongan el qt y riesgo de arritmias",
+      "respuesta": "Fármacos que prolongan QT: antiarrítmicos (amiodarona, sotalol, quinidina), antibióticos (azitromicina, levofloxacino), antipsicóticos (haloperidol, quetiapina), antidepresivos (citalopram), antihistamínicos (terfenadina), antifúngicos (fluconazol). Consultar www.crediblemeds.org. Riesgo aumentado con hipopotasemia, hipomagnesemia, o combinación de múltiples fármacos."
+    },
+    {
+      "id": 72,
+      "categoria": "tep_ecg",
+      "pregunta": "cambios ecg en el tromboembolismo pulmonar",
+      "respuesta": "TEP en ECG: patrón S1Q3T3 (onda S en DI, onda Q + T negativa en DIII). Taquicardia sinusal (más frecuente). BRD agudo o incompleto. Desviación derecha del eje. Inversión de T en V1-V4 (sobrecarga de VD). FA de nueva aparición. Ningún cambio es específico; el ECG sirve para descartar IAM y otros diagnósticos."
+    },
+    {
+      "id": 73,
+      "categoria": "pericarditis",
+      "pregunta": "ecg en pericarditis aguda",
+      "respuesta": "Pericarditis en ECG: 4 estadios. Estadio I (agudo): elevación difusa del ST cóncavo ('en silla de montar') en múltiples derivaciones + depresión de PR. Estadio II: normalización del ST. Estadio III: inversión de onda T. Estadio IV: normalización. Diferencia con IAM: ST cóncavo, difuso, sin onda Q, sin reciprocidad."
+    },
+    {
+      "id": 74,
+      "categoria": "hiperpotasemia",
+      "pregunta": "cambios ecg en hiperpotasemia",
+      "respuesta": "Hiperpotasemia en ECG (progresión con K+): K+ >5,5: ondas T picudas y simétricas ('tienda de campaña'). K+ >6,5: ensanchamiento del QRS, PR prolongado. K+ >7: ausencia de ondas P ('ritmo sinoventricular'). K+ >8-9: QRS muy ancho que puede degenerar en FV/asistolia. Tratamiento urgente: gluconato cálcico 1 g IV, bicarbonato, insulina+glucosa, salbutamol, hemodiálisis."
+    },
+    {
+      "id": 75,
+      "categoria": "hipopotasemia",
+      "pregunta": "cambios ecg en hipopotasemia",
+      "respuesta": "Hipopotasemia en ECG: aplanamiento de la onda T, depresión del ST, aparición de onda U prominente (>1 mm en V2-V3, podría confundirse con T, dando apariencia de QT largo). QT aparentemente prolongado. Riesgo de torsades de pointes, TV polimórfica. Tratamiento: reposición de K+ IV u oral según gravedad."
+    },
+    {
+      "id": 76,
+      "categoria": "interpretacion_ecg",
+      "pregunta": "cómo interpretar sistemáticamente un ecg",
+      "respuesta": "Pasos para interpretación sistemática de ECG: 1) Frecuencia cardiaca. 2) Regularidad del ritmo (RR). 3) Onda P (presencia, morfología, relación con QRS). 4) Intervalo PR. 5) Complejo QRS (duración, morfología, eje). 6) Segmento ST (elevación/depresión). 7) Onda T (inversión, acuminación). 8) Intervalo QT. 9) Ondas U. 10) Conclusión diagnóstica."
+    },
+    {
+      "id": 77,
+      "categoria": "interpretacion_ecg",
+      "pregunta": "qué es la concordancia precordial en la taquicardia",
+      "respuesta": "Concordancia precordial: todos los complejos QRS en V1-V6 son positivos (concordancia positiva) o negativos (concordancia negativa). En taquicardia QRS ancho: concordancia positiva (todos positivos) sugiere TV o WPW. Concordancia negativa (todos negativos) altamente sugestiva de TV. Es uno de los criterios de Brugada para TV vs TSV con aberrancia."
+    },
+    {
+      "id": 78,
+      "categoria": "interpretacion_ecg",
+      "pregunta": "criterios brugada para diferenciar tv de tsv con aberrancia",
+      "respuesta": "Algoritmo de Brugada (4 pasos, si alguno positivo = TV): 1) ¿Ausencia de RS en precordiales? Sí = TV. 2) ¿RS >100 ms en alguna precordial? Sí = TV. 3) ¿Disociación AV? Sí = TV. 4) ¿Morfología de TV en V1 y V6? (V1: monofásico R o qR; V6: QS o rS) Sí = TV. Si todos negativos = TSV con aberrancia. Sensibilidad 99%, especificidad 97%."
+    },
+    {
+      "id": 79,
+      "categoria": "miocardiopatias",
+      "pregunta": "arritmias en la miocardiopatía hipertrófica",
+      "respuesta": "MCH: arritmias frecuentes. FA en 20-25% (riesgo tromboembólico alto, anticoagular). TVNS frecuente en Holter. Muerte súbita por FV/TV: 0,5-1%/año. Factores de riesgo de muerte súbita: TVNS, síncope, grosor >30 mm, FMHS, respuesta anormal de TA en esfuerzo, realce tardío de gadolinio (RM). DAI en alto riesgo. ICD score MCH (HCM Risk-SCD)."
+    },
+    {
+      "id": 80,
+      "categoria": "apnea_sueno",
+      "pregunta": "relación entre apnea del sueño y arritmias",
+      "respuesta": "Apnea obstructiva del sueño (AOS) y arritmias: fuerte asociación con FA (riesgo 2-4 veces mayor). También relacionada con TV nocturna, bradicardias nocturnas, bloqueos AV. Mecanismo: hipoxia intermitente, activación simpática, inflamación, remodelado auricular. Tratamiento de AOS con CPAP reduce incidencia de FA y mejora resultado de cardioversión y ablación."
+    },
+    {
+      "id": 81,
+      "categoria": "embarazo_arritmias",
+      "pregunta": "arritmias durante el embarazo",
+      "respuesta": "Arritmias en embarazo: extrasístoles auriculares/ventriculares frecuentes (generalmente benignas). TPSV más frecuente por cambios hemodinámicos. FA rara, pensar en cardiopatía subyacente. Maniobras vagales: seguras. Adenosina: segura para TPSV aguda. Betabloqueantes: metoprolol/propranolol con precaución. Cardioversión eléctrica: segura en cualquier trimestre si inestabilidad. Evitar amiodarona y warfarina en 1° trimestre."
+    },
+    {
+      "id": 82,
+      "categoria": "deportistas_arritmias",
+      "pregunta": "arritmias en deportistas",
+      "respuesta": "Corazón de deportista: bradicardia sinusal (FC 40-60 lpm normal), arritmia sinusal, bloqueo AV 1° y 2° Mobitz I (mejoran con ejercicio = fisiológicos). Ectopia ventricular frecuente. Alerta: TV polimórfica, síncope de esfuerzo, TVNS, FA precoz (riesgo aumentado en deportistas de élite). Descartar MCH, displasia VD arritmogénica, canalopatías en deportistas con síncope o muerte súbita familiar."
+    },
+    {
+      "id": 83,
+      "categoria": "holter",
+      "pregunta": "cuándo pedir un holter",
+      "respuesta": "Holter 24-48h: indicado en palpitaciones frecuentes, síncope de etiología incierta, evaluación de tratamiento antiarrítmico, seguimiento post-ablación, evaluación de marcapasos/DAI, FA conocida para control de frecuencia. Monitor de eventos (30 días): para síntomas poco frecuentes. Holter implantable (Reveal): síncope inexplicado recurrente, hasta 3 años de monitorización."
+    },
+    {
+      "id": 84,
+      "categoria": "preguntas_frecuentes",
+      "pregunta": "las palpitaciones siempre indican una arritmia grave",
+      "respuesta": "No siempre. Las palpitaciones son muy frecuentes y en su mayoría benignas. Causas no cardiacas: ansiedad, anemia, hipertiroidismo, cafeína, alcohol, fiebre. Causas cardiacas benignas: extrasístoles auriculares/ventriculares aisladas, taquicardia sinusal. Señales de alarma: palpitaciones con síncope, dolor torácico, disnea, en cardiopatía conocida o historia familiar de muerte súbita → derivar urgentemente."
+    },
+    {
+      "id": 85,
+      "categoria": "preguntas_frecuentes",
+      "pregunta": "puedo hacer ejercicio si tengo una arritmia",
+      "respuesta": "Depende del tipo de arritmia: Extrasístoles aisladas/TPSV sin cardiopatía: ejercicio generalmente permitido. FA bien controlada: ejercicio moderado con control de FC. TV, canalopatías (QT largo, TVPC, Brugada): restricción de actividad física intensa hasta evaluación especializada. MCH con riesgo: restricción competitiva. Consultar siempre al cardiólogo antes de realizar ejercicio intenso con arritmia conocida."
+    },
+    {
+      "id": 86,
+      "categoria": "preguntas_frecuentes",
+      "pregunta": "qué diferencia hay entre marcapasos y desfibrilador implantable",
+      "respuesta": "Marcapasos: estimula el corazón cuando la frecuencia es demasiado lenta. Indicado en bradicardias sintomáticas, bloqueos AV. No trata taquiarritmias graves. DAI (desfibrilador): detecta y trata FV y TV con descargas eléctricas y/o estimulación antitaquicardia. También tiene función de marcapasos. Indicado en prevención de muerte súbita. Muchos pacientes tienen dispositivos combinados (CRT-D)."
+    },
+    {
+      "id": 87,
+      "categoria": "preguntas_frecuentes",
+      "pregunta": "qué es la muerte súbita cardiaca",
+      "respuesta": "Muerte súbita cardiaca (MSC): muerte inesperada de causa cardiaca dentro de la primera hora del inicio de los síntomas. Causa más frecuente: FV (80%) sobre cardiopatía isquémica. Otras: MCH, displasia VD arritmogénica, canalopatías (QT largo, Brugada, TVPC), anomalías coronarias. Incidencia: 1-2 casos/1000 personas/año. Supervivencia fuera del hospital: <10% sin RCP inmediata."
+    },
+    {
+      "id": 88,
+      "categoria": "preguntas_frecuentes",
+      "pregunta": "cuándo llamar al médico por una arritmia",
+      "respuesta": "Llamar urgencias (112/911): síncope o pérdida de conciencia, palpitaciones con dolor torácico o disnea intensa, palpitaciones en persona con cardiopatía conocida. Consultar pronto al médico: palpitaciones frecuentes o prolongadas, mareos recurrentes, palpitaciones con esfuerzo, antecedente familiar de muerte súbita. No urgente: extrasístoles aisladas ocasionales sin síntomas acompañantes."
+    },
+    {
+      "id": 89,
+      "categoria": "ablacion",
+      "pregunta": "ablación de fibrilación auricular cuándo indicarla",
+      "respuesta": "Ablación FA (aislamiento de venas pulmonares): indicada en FA paroxística o persistente sintomática refractaria a ≥1 fármaco antiarrítmico. También como alternativa de primera línea en FA paroxística en centros especializados. Éxito: 60-80% a 1 año (mayor en paroxística). Complicaciones: estenosis de venas pulmonares (1-3%), fístula atrioesofágica (<0,1%), ictus (0,5-1%), taponamiento (1%)."
+    },
+    {
+      "id": 90,
+      "categoria": "ablacion",
+      "pregunta": "ablación del flutter auricular resultado",
+      "respuesta": "Ablación del flutter típico (istmo cavotricuspídeo, ICT): muy eficaz, tasa de éxito >95%. Procedimiento sencillo con radiofrecuencia o crioablación en ICT. Bloqueo bidireccional del ICT = curación. Recurrencia <5%. Riesgo de FA posterior (20-30%), especialmente si sustrato auricular previo. La ablación del flutter reduce pero no elimina el riesgo de FA futura."
+    }
+  ],
+  "metadata": {
+    "total_preguntas": 90,
+    "idioma": "español",
+    "version": "2.0",
+    "categorias": [
+      "definiciones_basicas",
+      "fibrilacion_auricular",
+      "taquicardia_ventricular",
+      "bloqueos_av",
+      "canalopatias",
+      "diagnostico",
+      "farmacos",
+      "ecg_basico",
+      "flutter_auricular",
+      "taquicardias_supraventriculares",
+      "marcapasos_errante",
+      "extrasistoles",
+      "fibrilacion_ventricular",
+      "asistolia",
+      "ritmo_idioventricular",
+      "ecg_isquemia",
+      "hipertrofia",
+      "bloqueos_rama",
+      "casos_clinicos",
+      "rcp_emergencias",
+      "prevencion_arritmias",
+      "tep_ecg",
+      "pericarditis",
+      "hiperpotasemia",
+      "hipopotasemia",
+      "interpretacion_ecg",
+      "miocardiopatias",
+      "apnea_sueno",
+      "embarazo_arritmias",
+      "deportistas_arritmias",
+      "holter",
+      "preguntas_frecuentes",
+      "ablacion"
+    ],
+    "descripcion": "Corpus en español para chatbot de entrenamiento médico en ECG y arritmias cardiacas. Incluye traducciones del corpus original (35 preguntas) más 55 preguntas adicionales sobre interpretación ECG, casos clínicos, emergencias, farmacología y situaciones especiales."
+  }
+}

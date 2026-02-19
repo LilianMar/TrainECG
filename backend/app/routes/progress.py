@@ -33,6 +33,7 @@ async def get_user_progress(
         "longest_streak_days": progress.longest_streak_days,
         "total_achievements": progress.total_achievements,
         "last_activity_date": progress.last_activity_date,
+        "skill_level": current_user.skill_level,
     }
 
 
