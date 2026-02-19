@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.user import User
+from app.models.ecg import PostPracticeTest
 from app.routes.users import get_current_user
 from app.schemas.progress import UserProgressDetailResponse
 from app.services.progress_service import ProgressService
@@ -29,6 +30,7 @@ async def get_user_progress(
         "classification_accuracy": progress.classification_accuracy,
         "total_practice_attempts": progress.total_practice_attempts,
         "practice_accuracy": progress.practice_accuracy,
+        "total_practice_correct": progress.total_practice_correct,
         "current_streak_days": progress.current_streak_days,
         "longest_streak_days": progress.longest_streak_days,
         "total_achievements": progress.total_achievements,
@@ -61,10 +63,7 @@ async def get_recommendations(
 ):
     """Get personalized recommendations based on performance."""
     recommendations = ProgressService.generate_recommendations(db, current_user.id)
-    return {
-        "recommendations": recommendations,
-        "count": len(recommendations),
-    }
+    return recommendations
 
 
 @router.get("/stats/by-arrhythmia")
@@ -96,28 +95,105 @@ async def get_test_attempts(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Get last 6 test attempts with scores."""
-    from app.models.ecg import ECGClassification
+    """Get practice session attempts with accuracy percentage."""
+    from app.models.ecg import PracticeAttempt
     
-    attempts = db.query(ECGClassification).filter(
-        ECGClassification.user_id == current_user.id
-    ).order_by(ECGClassification.created_at.desc()).limit(6).all()
+    # Get all practice attempts ordered chronologically
+    attempts = db.query(PracticeAttempt).filter(
+        PracticeAttempt.user_id == current_user.id
+    ).order_by(PracticeAttempt.created_at.asc()).all()
     
-    # Reverse to show chronologically (oldest to newest)
-    attempts = list(reversed(attempts))
+    if not attempts:
+        return {"test_attempts": []}
     
-    test_data = []
-    for idx, attempt in enumerate(attempts, 1):
-        # Score is confidence * 100 (assuming it's between 0-1)
-        score = int(attempt.confidence * 100) if attempt.confidence else 0
-        test_data.append({
-            "attempt": f"Test {idx}",
-            "score": score,
-            "confidence": attempt.confidence,
-            "predicted_class": attempt.predicted_class.value if attempt.predicted_class else None,
-            "created_at": attempt.created_at.isoformat() if attempt.created_at else None,
+    # Group attempts into sessions (every 10 questions or by day)
+    sessions = []
+    current_session = []
+    session_size = 10  # Group every 10 attempts as a session
+    
+    for attempt in attempts:
+        current_session.append(attempt)
+        if len(current_session) >= session_size:
+            # Calculate accuracy for this session
+            correct_count = sum(1 for a in current_session if a.is_correct == "True")
+            accuracy = (correct_count / len(current_session)) * 100
+            sessions.append({
+                "attempt": f"Intento {len(sessions) + 1}",
+                "score": round(accuracy, 1),
+                "correct": correct_count,
+                "total": len(current_session),
+                "created_at": current_session[-1].created_at.isoformat() if current_session[-1].created_at else None,
+            })
+            current_session = []
+    
+    # Add remaining attempts if any
+    if current_session:
+        correct_count = sum(1 for a in current_session if a.is_correct == "True")
+        accuracy = (correct_count / len(current_session)) * 100
+        sessions.append({
+            "attempt": f"Intento {len(sessions) + 1}",
+            "score": round(accuracy, 1),
+            "correct": correct_count,
+            "total": len(current_session),
+            "created_at": current_session[-1].created_at.isoformat() if current_session[-1].created_at else None,
         })
     
+    # Return last 10 sessions
+    sessions = sessions[-10:]
+    
     return {
-        "test_attempts": test_data,
+        "test_attempts": sessions,
     }
+
+
+@router.get("/post-test-attempts")
+async def get_post_test_attempts(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Get test progression including initial test and post-practice tests."""
+    # Build test data array starting with initial reference point and initial test score
+    test_data = []
+    
+    # Add initial reference point (0, 0) - starting point
+    test_data.append({
+        "attempt": "Inicio",
+        "score": 0.0,
+        "correct": 0,
+        "total": 0,
+        "created_at": current_user.created_at.isoformat() if current_user.created_at else None,
+    })
+    
+    # Add initial test score as Test 1
+    if current_user.initial_test_completed and current_user.initial_test_score is not None:
+        initial_accuracy = (current_user.initial_test_score / 10) * 100  # Assuming 10 questions
+        test_data.append({
+            "attempt": "Test 1",
+            "score": round(initial_accuracy, 1),
+            "correct": current_user.initial_test_score,
+            "total": 10,
+            "created_at": current_user.updated_at.isoformat() if current_user.updated_at else None,
+        })
+    
+    # Get all post-practice test results ordered chronologically
+    tests = db.query(PostPracticeTest).filter(
+        PostPracticeTest.user_id == current_user.id
+    ).order_by(PostPracticeTest.created_at.asc()).all()
+    
+    # Add post-practice tests starting from Test 2
+    for i, test in enumerate(tests):
+        test_data.append({
+            "attempt": f"Test {i + 2}",
+            "score": round(test.accuracy, 1),
+            "correct": test.score,
+            "total": test.total,
+            "created_at": test.created_at.isoformat() if test.created_at else None,
+        })
+    
+    # Return last 20 tests
+    test_data = test_data[-20:]
+    
+    return {
+        "post_test_attempts": test_data,
+    }
+

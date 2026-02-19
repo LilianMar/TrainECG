@@ -17,25 +17,50 @@ class AchievementService:
 
     @staticmethod
     def get_user_achievements(db: Session, user_id: int) -> dict:
-        """Get all achievements for a user."""
-        achievements = db.query(UserAchievement).filter(
+        """Get all achievements for a user (earned and available)."""
+        # Get earned achievements
+        earned = db.query(UserAchievement).filter(
             UserAchievement.user_id == user_id
         ).all()
+        
+        earned_set = {a.achievement_type for a in earned}
+        
+        earned_badges = [
+            {
+                "id": a.id,
+                "name": a.badge_name,
+                "description": a.description,
+                "icon": a.icon,
+                "color": a.color,
+                "earned_at": a.earned_at.isoformat() if a.earned_at else None,
+                "achieved": True,
+            }
+            for a in earned
+        ]
+        
+        # Get available badges (not yet earned)
+        available_badges = []
+        for achievement_type, badge_def in BADGE_DEFINITIONS.items():
+            if achievement_type not in earned_set:
+                available_badges.append({
+                    "id": None,
+                    "name": badge_def["name"],
+                    "description": badge_def["description"],
+                    "icon": badge_def["icon"],
+                    "color": badge_def["color"],
+                    "earned_at": None,
+                    "achieved": False,
+                })
+        
+        # Combine: earned first, then available
+        all_badges = earned_badges + available_badges
 
         return {
-            "earned_badges": [
-                {
-                    "id": a.id,
-                    "name": a.badge_name,
-                    "description": a.description,
-                    "icon": a.icon,
-                    "color": a.color,
-                    "earned_at": a.earned_at.isoformat() if a.earned_at else None,
-                }
-                for a in achievements
-            ],
-            "total_earned": len(achievements),
-            "available_badges": len(BADGE_DEFINITIONS),
+            "earned_badges": earned_badges,
+            "available_badges": available_badges,
+            "all_badges": all_badges,
+            "total_earned": len(earned_badges),
+            "total_available": len(BADGE_DEFINITIONS),
         }
 
     @staticmethod
@@ -46,6 +71,7 @@ class AchievementService:
         test_attempt_id: int = None
     ) -> UserAchievement:
         """Unlock a badge for a user."""
+        from datetime import datetime
         
         # Check if already earned
         existing = db.query(UserAchievement).filter(
@@ -70,6 +96,7 @@ class AchievementService:
             icon=badge_def["icon"],
             color=badge_def["color"],
             test_attempt_id=test_attempt_id,
+            earned_at=datetime.now(),
         )
         
         db.add(achievement)
@@ -96,19 +123,27 @@ class AchievementService:
         if not progress:
             return unlocked
 
-        # 1. First diagnostic test
-        diagnostic_tests = db.query(ECGClassification).filter(
+        # 1. First ECG classified
+        classifications = db.query(ECGClassification).filter(
             ECGClassification.user_id == user_id
         ).count()
         
-        if diagnostic_tests == 1:
+        if classifications == 1:
+            achievement = AchievementService.unlock_achievement(
+                db, user_id, "first_ecg_classified", test_attempt_id
+            )
+            if achievement:
+                unlocked.append(achievement)
+
+        # 2. First diagnostic test
+        if classifications == 1:
             achievement = AchievementService.unlock_achievement(
                 db, user_id, "diagnostic_complete", test_attempt_id
             )
             if achievement:
                 unlocked.append(achievement)
 
-        # 2. Improvement 15%
+        # 3. Improvement 15%
         if test_data and "improvement_percentage" in test_data:
             if test_data["improvement_percentage"] >= 15:
                 achievement = AchievementService.unlock_achievement(
@@ -117,7 +152,7 @@ class AchievementService:
                 if achievement:
                     unlocked.append(achievement)
 
-        # 3. Score 90%+
+        # 4. Score 90%+
         if test_data and "accuracy" in test_data:
             if test_data["accuracy"] >= 90:
                 achievement = AchievementService.unlock_achievement(
@@ -126,7 +161,7 @@ class AchievementService:
                 if achievement:
                     unlocked.append(achievement)
 
-        # 4. Arrhythmia mastery (90%+ in specific types)
+        # 5. Arrhythmia mastery (90%+ in specific types)
         if test_data and "arrhythmia_breakdown" in test_data:
             for arrhythmia_data in test_data["arrhythmia_breakdown"]:
                 arrhythmia_name = arrhythmia_data.get("name", "").lower()
@@ -152,7 +187,15 @@ class AchievementService:
                         if achievement:
                             unlocked.append(achievement)
 
-        # 5. Three tests completed
+        # 6. Hundred ECGs classified
+        if classifications >= 100:
+            achievement = AchievementService.unlock_achievement(
+                db, user_id, "hundred_ecgs", test_attempt_id
+            )
+            if achievement:
+                unlocked.append(achievement)
+
+        # 7. Three tests completed
         tests_completed = db.query(ECGClassification).filter(
             ECGClassification.user_id == user_id
         ).count()
@@ -164,7 +207,7 @@ class AchievementService:
             if achievement:
                 unlocked.append(achievement)
 
-        # 6. 100+ correct answers in practice
+        # 8. 100+ correct answers in practice
         if progress.total_practice_correct >= 100:
             achievement = AchievementService.unlock_achievement(
                 db, user_id, "hundred_correct", test_attempt_id

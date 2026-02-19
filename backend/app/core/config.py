@@ -35,7 +35,13 @@ class Settings(BaseSettings):
         "http://localhost:9000",
     ]
 
-    # === LLM ===
+    # === LLM / OpenAI ===
+    OPENAI_API_KEY: str = ""
+    OPENAI_MODEL: str = "gpt-3.5-turbo"
+    OPENAI_MAX_TOKENS: int = 300
+    OPENAI_TEMPERATURE: float = 0.6
+    
+    # Legacy LLM settings (kept for compatibility)
     LLM_API_KEY: str = ""
     LLM_MODEL: str = "gpt-3.5-turbo"
     LLM_TEMPERATURE: float = 0.7

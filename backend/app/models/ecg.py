@@ -87,3 +87,23 @@ class PracticeAttempt(Base):
 
     def __repr__(self) -> str:
         return f"<PracticeAttempt(id={self.id}, user_id={self.user_id}, correct={self.is_correct})>"
+
+
+class PostPracticeTest(Base):
+    """Model for tracking post-practice test results."""
+
+    __tablename__ = "post_practice_tests"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    score = Column(Integer, nullable=False)  # Number of correct answers
+    total = Column(Integer, nullable=False)  # Total questions in the test
+    accuracy = Column(Float, nullable=False)  # Percentage (0-100)
+    previous_level = Column(Integer, nullable=True)  # Skill level before test
+    new_level = Column(Integer, nullable=False)  # Skill level after test
+    level_improved = Column(String(50), nullable=False)  # "True" or "False"
+    question_answers = Column(Text, nullable=True)  # JSON: List of {question_id, is_correct} for arrhythmia breakdown
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    def __repr__(self) -> str:
+        return f"<PostPracticeTest(id={self.id}, user_id={self.user_id}, accuracy={self.accuracy}%)>"

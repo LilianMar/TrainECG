@@ -76,8 +76,10 @@ def create_app() -> FastAPI:
     )
 
     # Setup middleware
-    setup_cors_middleware(app)
+    # Note: Middleware is executed in reverse order (LIFO), so CORS should be added LAST
+    # to be executed FIRST in the request chain
     setup_logging_middleware(app)
+    setup_cors_middleware(app)
 
     # Include routers
     app.include_router(health.router)

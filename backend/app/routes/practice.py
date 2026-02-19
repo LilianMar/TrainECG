@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.user import User
+from app.models.ecg import PostPracticeTest
 from app.routes.users import get_current_user
 from app.schemas.ecg import (
     PracticeAnswerRequest,
@@ -225,6 +226,7 @@ async def post_practice_test(
         score = 0
         wrong_questions = []
         total_attempts = 0
+        question_answers = []  # Track question IDs and correctness for arrhythmia breakdown
 
         for answer in answers:
             question_id = answer.get("question_id")
@@ -245,6 +247,13 @@ async def post_practice_test(
                 score += 1
             else:
                 wrong_questions.append(question)
+
+            # Track this question answer for arrhythmia breakdown
+            question_answers.append({
+                "question_id": question_id,
+                "is_correct": is_correct,
+                "correct_class": question.get("correct_class", "unknown")
+            })
 
             # Record attempt
             ECGService.create_practice_attempt(
@@ -285,6 +294,21 @@ async def post_practice_test(
 
         db.add(progress)
         db.add(current_user)
+        db.commit()
+
+        # Save post-practice test result with question answers for arrhythmia breakdown
+        import json
+        post_test = PostPracticeTest(
+            user_id=current_user.id,
+            score=score,
+            total=total,
+            accuracy=accuracy,
+            previous_level=previous_level,
+            new_level=new_skill_level,
+            level_improved=str(new_skill_level > previous_level if previous_level else False),
+            question_answers=json.dumps(question_answers),
+        )
+        db.add(post_test)
         db.commit()
 
         # Generate recommendations using LLM

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, Brain, CheckCircle, TrendingUp, AlertCircle } from "lucide-react";
+import { ArrowLeft, Brain, CheckCircle, XCircle, TrendingUp, AlertCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -125,16 +125,6 @@ const PostPracticeTest = () => {
 
       if (response.is_correct) {
         setScore(score + 1);
-        toast({
-          title: "¡Correcto!",
-          description: "Excelente respuesta",
-        });
-      } else {
-        toast({
-          title: "Incorrecto",
-          description: `La respuesta correcta es la opción ${String.fromCharCode(65 + response.correct_answer)}`,
-          variant: "destructive",
-        });
       }
     } catch (error) {
       console.error("Error submitting answer:", error);
@@ -208,7 +198,9 @@ const PostPracticeTest = () => {
   }
 
   if (testResults) {
-    const { accuracy, previous_level, new_level, level_improved, recommendations } = testResults;
+    const { previous_level, new_level, level_improved, recommendations } = testResults;
+    // Calcular precisión localmente basándose en el score
+    const accuracy = questions.length > 0 ? (score / questions.length) * 100 : 0;
 
     return (
       <div className="min-h-screen bg-background">
@@ -217,13 +209,15 @@ const PostPracticeTest = () => {
           <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-transparent" />
           <div className="relative z-10 container mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
-              <Link to="/dashboard">
-                <Button variant="outline" size="sm" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Volver
-                </Button>
-              </Link>
-              <h1 className="text-2xl font-bold text-white">Resultados de Evaluación</h1>
+              <div className="flex items-center space-x-4">
+                <Link to="/dashboard">
+                  <Button variant="outline" size="sm" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Volver
+                  </Button>
+                </Link>
+                <h1 className="text-2xl font-bold text-white">Resultados de Evaluación</h1>
+              </div>
               <div className="w-10" /> {/* Spacer */}
             </div>
           </div>
@@ -252,19 +246,19 @@ const PostPracticeTest = () => {
                   </p>
                 </div>
 
-                <div className="bg-accent/10 p-6 rounded-lg border border-accent/20">
+                <div className="bg-accent/20 p-6 rounded-lg border border-accent/40">
                   <div className="grid grid-cols-3 gap-4">
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">Precisión</p>
-                      <p className="text-3xl font-bold text-accent">{Math.round(accuracy)}%</p>
+                      <p className="text-3xl font-bold" style={{color: 'hsl(213, 50%, 25%)'}}>{Math.round(accuracy)}%</p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">Nivel Anterior</p>
-                      <p className="text-3xl font-bold text-warning">{previous_level}/5</p>
+                      <p className="text-3xl font-bold" style={{color: 'hsl(38, 92%, 50%)'}}>{previous_level}/5</p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">Nivel Actual</p>
-                      <p className="text-3xl font-bold text-success">{new_level}/5</p>
+                      <p className="text-3xl font-bold" style={{color: 'hsl(142, 76%, 36%)'}}>{new_level}/5</p>
                     </div>
                   </div>
                 </div>
@@ -320,7 +314,7 @@ const PostPracticeTest = () => {
             </Button>
             <Button
               onClick={() => navigate("/progress")}
-              className="flex-1"
+              className="btn-medical flex-1"
             >
               Ver Progreso Completo
             </Button>
@@ -344,15 +338,15 @@ const PostPracticeTest = () => {
                 <p className="text-muted-foreground">Procesando resultados y generando recomendaciones...</p>
               </div>
 
-              <div className="bg-accent/10 p-6 rounded-lg border border-accent/20">
-                <p className="text-2xl font-bold text-accent">{score}/10</p>
+              <div className="bg-accent/20 p-6 rounded-lg border border-accent/40">
+                <p className="text-2xl font-bold" style={{color: 'hsl(213, 50%, 25%)'}}>{score}/10</p>
                 <p className="text-sm text-muted-foreground mt-2">Tu puntuación</p>
               </div>
 
               <Button
                 onClick={handleSubmitTest}
                 disabled={isSubmittingTest}
-                className="w-full"
+                className="btn-medical w-full"
               >
                 {isSubmittingTest ? "Procesando..." : "Ver Resultados y Recomendaciones"}
               </Button>
@@ -383,13 +377,15 @@ const PostPracticeTest = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-transparent" />
         <div className="relative z-10 container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <Link to="/dashboard">
-              <Button variant="outline" size="sm" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Volver
-              </Button>
-            </Link>
-            <h1 className="text-2xl font-bold text-white">Test de Evaluación</h1>
+            <div className="flex items-center space-x-4">
+              <Link to="/dashboard">
+                <Button variant="outline" size="sm" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Volver
+                </Button>
+              </Link>
+              <h1 className="text-2xl font-bold text-white">Test de Evaluación</h1>
+            </div>
             <div className="w-20 text-right">
               <span className="text-sm text-white/90">
                 {currentQuestion + 1}/{questions.length}
@@ -437,39 +433,28 @@ const PostPracticeTest = () => {
               {["option_a", "option_b", "option_c", "option_d"].map((option, index) => {
                 const optionLabel = String.fromCharCode(65 + index);
                 const optionText = currentQ?.[option as keyof typeof currentQ];
-                const isSelected = selectedAnswer === index;
-                const isCorrect =
-                  showFeedback && answerFeedback?.correct_answer === index;
-                const isWrong =
-                  showFeedback && isSelected && !isCorrect;
 
                 return (
                   <button
                     key={option}
                     onClick={() => handleAnswerSelect(index)}
                     disabled={showFeedback}
-                    className={`w-full p-4 text-left rounded-lg border-2 transition-all ${
-                      isCorrect
-                        ? "border-success bg-success/10"
-                        : isWrong
-                          ? "border-destructive bg-destructive/10"
-                          : isSelected
-                            ? "border-accent bg-accent/10"
-                            : "border-border hover:border-accent/50"
-                    } ${showFeedback ? "cursor-not-allowed" : "cursor-pointer"}`}
+                    className={`w-full p-4 text-left border rounded-lg transition-all ${
+                      selectedAnswer === index
+                        ? showFeedback
+                          ? index === answerFeedback?.correct_answer
+                            ? "border-success bg-success/10 text-success"
+                            : "border-destructive bg-destructive/10 text-destructive"
+                          : "border-primary bg-primary/10 text-primary"
+                        : showFeedback && index === answerFeedback?.correct_answer
+                        ? "border-success bg-success/10 text-success"
+                        : "border-border hover:border-primary/50 hover:bg-primary/5"
+                    }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`flex items-center justify-center w-8 h-8 rounded font-semibold ${
-                          isCorrect
-                            ? "bg-success text-white"
-                            : isWrong
-                              ? "bg-destructive text-white"
-                              : "bg-border"
-                        }`}
-                      >
+                    <div className="flex items-center">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full border border-current flex items-center justify-center mr-3 text-xs font-medium">
                         {optionLabel}
-                      </div>
+                      </span>
                       <span>{optionText}</span>
                     </div>
                   </button>
@@ -479,33 +464,46 @@ const PostPracticeTest = () => {
 
             {/* Feedback */}
             {showFeedback && answerFeedback && (
-              <div className={`p-4 rounded-lg ${
-                answerFeedback.is_correct
-                  ? "bg-success/10 border border-success"
-                  : "bg-destructive/10 border border-destructive"
-              }`}>
-                <p className="font-semibold mb-2">
-                  {answerFeedback.is_correct ? "¡Correcto!" : "Incorrecto"}
-                </p>
-                <p className="text-sm mb-3">{answerFeedback.explanation}</p>
-                <p className="text-xs text-muted-foreground">
-                  Clase correcta: {answerFeedback.correct_class.replace(/_/g, " ")}
-                </p>
-              </div>
+              <Card className={`medical-card ${answerFeedback.is_correct ? 'border-success/20 bg-success/5' : 'border-destructive/20 bg-destructive/5'}`}>
+                <CardHeader>
+                  <CardTitle className={`flex items-center ${answerFeedback.is_correct ? 'text-success' : 'text-destructive'}`}>
+                    {answerFeedback.is_correct ? (
+                      <CheckCircle className="w-5 h-5 mr-2" />
+                    ) : (
+                      <XCircle className="w-5 h-5 mr-2" />
+                    )}
+                    {answerFeedback.is_correct ? "¡Correcto!" : "Incorrecto"}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h4 className="font-medium mb-2">Explicación:</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {answerFeedback.explanation}
+                    </p>
+                  </div>
+                  
+                  <div className="p-4 bg-secondary rounded-lg">
+                    <h4 className="font-medium mb-2">Clase Correcta:</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {answerFeedback.correct_class}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
             )}
           </CardContent>
         </Card>
 
         {/* Action Buttons */}
         {!showFeedback ? (
-          <Button onClick={handleSubmitAnswer} className="w-full" size="lg">
+          <Button onClick={handleSubmitAnswer} className="btn-medical w-full mt-6">
             Enviar Respuesta
           </Button>
         ) : (
           <Button
             onClick={handleNextQuestion}
-            className="w-full"
-            size="lg"
+            className="btn-medical w-full mt-6"
           >
             {currentQuestion === questions.length - 1 ? "Ver Resultados" : "Siguiente Pregunta"}
           </Button>

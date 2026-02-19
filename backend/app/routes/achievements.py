@@ -21,6 +21,6 @@ async def get_achievements(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Get all achievements/badges for the current user."""
+    """Get all achievements/badges for the current user (earned and available)."""
     achievements = AchievementService.get_user_achievements(db, current_user.id)
     return achievements

@@ -106,17 +106,6 @@ const PracticeMode = () => {
 
       if (response.is_correct) {
         setScore((prev) => prev + 1);
-        toast({
-          title: "¡Correcto!",
-          description: "Excelente diagnostico.",
-          variant: "success",
-        });
-      } else {
-        toast({
-          title: "Respuesta incorrecta",
-          description: "Revisa la explicacion para aprender.",
-          variant: "destructive",
-        });
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : "No se pudo enviar la respuesta";

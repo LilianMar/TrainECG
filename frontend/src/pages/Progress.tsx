@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress as ProgressBar } from "@/components/ui/progress";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { apiRequest } from "@/lib/api";
+import { BadgeIcon } from "@/components/BadgeIcon";
 
 interface ProgressionData {
   week: string;
@@ -17,18 +18,19 @@ interface ProgressionData {
 interface TestAttempt {
   attempt: string;
   score: number;
-  confidence: number;
-  predicted_class: string;
+  correct: number;
+  total: number;
   created_at: string;
 }
 
 interface Badge {
-  id: number;
+  id: number | null;
   name: string;
   description: string;
   icon: string;
   color: string;
-  earned_at: string;
+  earned_at: string | null;
+  achieved: boolean;
 }
 
 const Progress = () => {
@@ -44,34 +46,44 @@ const Progress = () => {
   } | null>(null);
   const [progression, setProgression] = useState<ProgressionData[]>([]);
   const [testAttempts, setTestAttempts] = useState<TestAttempt[]>([]);
+  const [postTestAttempts, setPostTestAttempts] = useState<TestAttempt[]>([]);
   const [arrhythmiaStats, setArrhythmiaStats] = useState<Array<{
     name: string;
-    correct: number;
-    total: number;
-    accuracy: number;
+    practice_correct: number;
+    practice_total: number;
+    practice_accuracy: number;
+    test_correct: number;
+    test_total: number;
+    test_accuracy: number;
   }>>([]);
-  const [recommendations, setRecommendations] = useState<Array<{
-    type: string;
-    arrhythmia: string;
-    accuracy: number;
-    message: string;
-  }>>([]);
+  const [recommendations, setRecommendations] = useState<{
+    recommendations: string;
+    test_attempts: number;
+    overall_accuracy: number;
+    weak_areas: string[];
+    has_llm: boolean;
+  } | null>(null);
   const [badges, setBadges] = useState<Badge[]>([]);
-  // Sample data for charts
-  const performanceData = [
-    { date: "Sem 1", accuracy: 65, cases: 8 },
-    { date: "Sem 2", accuracy: 72, cases: 12 },
-    { date: "Sem 3", accuracy: 78, cases: 15 },
-    { date: "Sem 4", accuracy: 85, cases: 18 },
-    { date: "Sem 5", accuracy: 87, cases: 24 },
-    { date: "Sem 6", accuracy: 91, cases: 28 },
-  ];
 
-  const pieData = [
-    { name: "Correcto", value: progressData?.practice_accuracy ?? 0, color: "hsl(var(--success))" },
-    { name: "Incorrecto", value: 100 - (progressData?.practice_accuracy ?? 0), color: "hsl(var(--destructive))" },
-  ];
+  // Calculate pie chart data based on practice attempts
+  const calculatePieData = () => {
+    if (!progressData || progressData.total_practice_attempts === 0) {
+      return [
+        { name: "Correcto", value: 0, color: "hsl(var(--success))" },
+        { name: "Incorrecto", value: 0, color: "hsl(var(--destructive))" },
+      ];
+    }
 
+    const correctPercentage = (progressData.total_practice_correct / progressData.total_practice_attempts) * 100;
+    const incorrectPercentage = 100 - correctPercentage;
+
+    return [
+      { name: "Correcto", value: Math.round(correctPercentage), color: "hsl(var(--success))" },
+      { name: "Incorrecto", value: Math.round(incorrectPercentage), color: "hsl(var(--destructive))" },
+    ];
+  };
+
+  const pieData = calculatePieData();
 
 
   const loadProgress = useCallback(async () => {
@@ -95,30 +107,66 @@ const Progress = () => {
         setTestAttempts(testResponse.test_attempts);
       }
 
-      const statsResponse = await apiRequest<{ arrhythmia_stats: Record<string, { correct: number; total: number; accuracy: number }> }>(
+      const postTestResponse = await apiRequest<{ post_test_attempts: TestAttempt[] }>(
+        "/progress/post-test-attempts"
+      );
+      if (postTestResponse.post_test_attempts) {
+        setPostTestAttempts(postTestResponse.post_test_attempts);
+      }
+
+      const statsResponse = await apiRequest<{ arrhythmia_stats: Record<string, { 
+        practice_correct: number; 
+        practice_total: number; 
+        practice_accuracy: number;
+        test_correct: number;
+        test_total: number;
+        test_accuracy: number;
+      }> }>(
         "/progress/stats/by-arrhythmia"
       );
       const stats = Object.entries(statsResponse.arrhythmia_stats || {}).map(
         ([name, stat]) => ({
           name,
-          correct: stat.correct,
-          total: stat.total,
-          accuracy: stat.accuracy,
+          practice_correct: stat.practice_correct,
+          practice_total: stat.practice_total,
+          practice_accuracy: stat.practice_accuracy,
+          test_correct: stat.test_correct,
+          test_total: stat.test_total,
+          test_accuracy: stat.test_accuracy,
         })
       );
       setArrhythmiaStats(stats);
 
-      const recommendationsResponse = await apiRequest<{ recommendations: Array<{ type: string; arrhythmia: string; accuracy: number; message: string }> }>(
+      const recommendationsResponse = await apiRequest<{
+        recommendations: string;
+        test_attempts: number;
+        overall_accuracy: number;
+        weak_areas: string[];
+        has_llm: boolean;
+      }>(
         "/progress/recommendations"
       );
-      setRecommendations(recommendationsResponse.recommendations ?? []);
+      if (recommendationsResponse) {
+        setRecommendations(recommendationsResponse);
+      }
 
-      const badgesResponse = await apiRequest<{ earned_badges: Badge[] }>(
+      const badgesResponse = await apiRequest<{ 
+        earned_badges: Badge[];
+        available_badges: Badge[];
+        all_badges: Badge[];
+        total_earned: number;
+        total_available: number;
+      }>(
         "/achievements"
       );
-      setBadges(badgesResponse.earned_badges ?? []);
-    } catch {
+      // Get top 5 badges (earned first, then available)
+      if (badgesResponse) {
+        const allBadges = badgesResponse.all_badges ?? badgesResponse.earned_badges ?? [];
+        setBadges(allBadges.slice(0, 5));
+      }
+    } catch (error) {
       // Keep placeholders if API is unavailable
+      console.error("Error loading progress data:", error);
     }
   }, []);
 
@@ -173,7 +221,11 @@ const Progress = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Precisión Total</p>
-                  <p className="text-2xl font-bold text-success">{Math.round(progressData?.classification_accuracy ?? 0)}%</p>
+                  <p className="text-2xl font-bold text-success">
+                    {progressData?.total_practice_attempts && progressData.total_practice_attempts > 0
+                      ? Math.round((progressData.total_practice_correct / progressData.total_practice_attempts) * 100)
+                      : 0}%
+                  </p>
                 </div>
                 <TrendingUp className="w-8 h-8 text-success" />
               </div>
@@ -196,24 +248,10 @@ const Progress = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Preguntas Correctas</p>
+                  <p className="text-sm text-muted-foreground">Preguntas Correctas en Práctica</p>
                   <p className="text-2xl font-bold text-warning">{progressData?.total_practice_correct ?? 0}</p>
                 </div>
                 <Zap className="w-8 h-8 text-warning" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="medical-card">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Insignias</p>
-                  <p className="text-2xl font-bold text-foreground">
-                    {badges.length}
-                  </p>
-                </div>
-                <Award className="w-8 h-8 text-foreground" />
               </div>
             </CardContent>
           </Card>
@@ -234,75 +272,88 @@ const Progress = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Test Attempts Performance Chart */}
+          {/* Practice Performance Chart */}
           <Card className="medical-card">
             <CardHeader>
-              <CardTitle>Desempeño en Test Inicial (Últimos 6 intentos)</CardTitle>
+              <CardTitle>Progreso en Test por Intento</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={testAttempts.length > 0 ? testAttempts : performanceData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey={testAttempts.length > 0 ? "attempt" : "date"} />
-                  <YAxis domain={[0, 100]} />
-                  <Tooltip 
-                    formatter={(value, name) => {
-                      if (name === "score") return [`${value}%`, "Puntuación"];
-                      return [`${value}%`, "Precisión"];
-                    }}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey={testAttempts.length > 0 ? "score" : "accuracy"}
-                    stroke="hsl(var(--primary))" 
-                    strokeWidth={3}
-                    dot={{ fill: "hsl(var(--primary))", strokeWidth: 2, r: 6 }}
-                    activeDot={{ r: 8 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              {postTestAttempts.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={postTestAttempts}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="attempt" />
+                    <YAxis domain={[0, 100]} label={{ value: '% Aciertos', angle: -90, position: 'insideLeft' }} />
+                    <Tooltip 
+                      formatter={(value: number) => [`${value}%`, "Precisión"]}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="score"
+                      stroke="hsl(var(--primary))" 
+                      strokeWidth={3}
+                      dot={{ fill: "hsl(var(--primary))", strokeWidth: 2, r: 6 }}
+                      activeDot={{ r: 8 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                  <p>No hay datos de test disponibles. Completa el test inicial para ver tu progreso.</p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
           {/* Accuracy Distribution */}
           <Card className="medical-card">
             <CardHeader>
-              <CardTitle>Distribución de Respuestas</CardTitle>
+              <CardTitle>Distribución de Respuestas en Test</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex justify-center mb-6">
-                <ResponsiveContainer width={200} height={200}>
-                  <PieChart>
-                    <Pie
-                      data={pieData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={90}
-                      dataKey="value"
-                      startAngle={90}
-                      endAngle={450}
-                    >
-                      {pieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value) => [`${value}%`, "Porcentaje"]} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Respuestas Correctas</span>
-                  <span className="font-medium text-success">{Math.round(progressData?.practice_accuracy ?? 0)}%</span>
+              {progressData && progressData.total_practice_attempts > 0 ? (
+                <>
+                  <div className="flex justify-center mb-6">
+                    <ResponsiveContainer width={200} height={200}>
+                      <PieChart>
+                        <Pie
+                          data={pieData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={90}
+                          dataKey="value"
+                          startAngle={90}
+                          endAngle={450}
+                        >
+                          {pieData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value) => [`${value}%`, "Porcentaje"]} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Respuestas Correctas</span>
+                      <span className="font-medium text-success">
+                        {pieData[0].value}% ({progressData.total_practice_correct}/{progressData.total_practice_attempts})
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Respuestas Incorrectas</span>
+                      <span className="font-medium text-destructive">
+                        {pieData[1].value}% ({progressData.total_practice_attempts - progressData.total_practice_correct}/{progressData.total_practice_attempts})
+                      </span>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                  <p>No hay datos de práctica disponibles. Completa algunas preguntas para ver la distribución.</p>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Respuestas Incorrectas</span>
-                  <span className="font-medium text-destructive">
-                    {Math.max(0, 100 - Math.round(progressData?.practice_accuracy ?? 0))}%
-                  </span>
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
 
@@ -312,20 +363,70 @@ const Progress = () => {
               <CardTitle>Rendimiento por Tipo de Arritmia</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {arrhythmiaStats.length === 0 ? (
                   <p className="text-sm text-muted-foreground">Sin datos por arritmia.</p>
-                ) : arrhythmiaStats.map((stat, index) => (
-                  <div key={index} className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">{stat.name}</span>
-                      <span className="text-sm text-muted-foreground">
-                        {stat.correct}/{stat.total} ({stat.accuracy}%)
+                ) : arrhythmiaStats.filter(stat => stat.practice_total > 0 || stat.test_total > 0).map((stat, index) => (
+                  <div key={index} className="space-y-3">
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="text-sm font-medium capitalize">
+                        {stat.name.replace(/_/g, " ")}
                       </span>
                     </div>
-                    <ProgressBar value={stat.accuracy} className="h-2" />
+                    
+                    {/* Barras lado a lado */}
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Practice Progress Bar */}
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-medium text-muted-foreground">Práctica</span>
+                          <span className="text-xs font-medium text-muted-foreground">
+                            {stat.practice_total > 0 ? `${stat.practice_correct}/${stat.practice_total}` : "N/A"}
+                          </span>
+                        </div>
+                        {stat.practice_total > 0 ? (
+                          <>
+                            <ProgressBar 
+                              value={stat.practice_accuracy} 
+                              className="h-3 [&>div]:bg-blue-500"
+                            />
+                            <span className="text-xs text-muted-foreground text-center block">
+                              {stat.practice_accuracy}%
+                            </span>
+                          </>
+                        ) : (
+                          <div className="h-3 bg-muted rounded-full" />
+                        )}
+                      </div>
+                      
+                      {/* Test Progress Bar */}
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-medium text-muted-foreground">Test</span>
+                          <span className="text-xs font-medium text-muted-foreground">
+                            {stat.test_total > 0 ? `${stat.test_correct}/${stat.test_total}` : "N/A"}
+                          </span>
+                        </div>
+                        {stat.test_total > 0 ? (
+                          <>
+                            <ProgressBar 
+                              value={stat.test_accuracy} 
+                              className="h-3 [&>div]:bg-green-500"
+                            />
+                            <span className="text-xs text-muted-foreground text-center block">
+                              {stat.test_accuracy}%
+                            </span>
+                          </>
+                        ) : (
+                          <div className="h-3 bg-muted rounded-full" />
+                        )}
+                      </div>
+                    </div>
                   </div>
                 ))}
+                {arrhythmiaStats.filter(stat => stat.practice_total > 0 || stat.test_total > 0).length === 0 && (
+                  <p className="text-sm text-muted-foreground">Sin datos por arritmia.</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -333,7 +434,10 @@ const Progress = () => {
           {/* Achievements/Badges */}
           <Card className="medical-card">
             <CardHeader>
-              <CardTitle>Insignias Desbloqueadas ({badges.length})</CardTitle>
+              <div className="flex items-center gap-2">
+                <Award className="w-5 h-5" />
+                <CardTitle>Insignias</CardTitle>
+              </div>
             </CardHeader>
             <CardContent>
               {badges.length === 0 ? (
@@ -348,15 +452,34 @@ const Progress = () => {
                   {badges.map((badge, index) => (
                     <div 
                       key={index} 
-                      className="flex items-center space-x-3 p-3 rounded-lg border border-success/20 bg-success/10"
+                      className={`flex items-center space-x-3 p-3 rounded-lg border transition-all ${
+                        badge.achieved
+                          ? "border-success/20 bg-success/10"
+                          : "border-muted/30 bg-muted/5 opacity-50"
+                      }`}
                     >
-                      <div className="text-2xl">{badge.icon}</div>
+                      <div>
+                        <BadgeIcon 
+                          iconName={badge.icon} 
+                          isAchieved={badge.achieved}
+                          className="w-6 h-6"
+                        />
+                      </div>
                       <div className="flex-1">
-                        <h4 className="font-medium text-success">{badge.name}</h4>
+                        <h4 className={`font-medium ${badge.achieved ? "text-success" : "text-muted-foreground"}`}>
+                          {badge.name}
+                        </h4>
                         <p className="text-xs text-muted-foreground mb-1">{badge.description}</p>
-                        <p className="text-xs text-success/70">
-                          Desbloqueado: {new Date(badge.earned_at).toLocaleDateString('es-ES')}
-                        </p>
+                        {badge.achieved && badge.earned_at && (
+                          <p className="text-xs text-success/70">
+                            Desbloqueado: {new Date(badge.earned_at).toLocaleDateString('es-ES')}
+                          </p>
+                        )}
+                        {!badge.achieved && (
+                          <p className="text-xs text-muted-foreground/70">
+                            Por conseguir
+                          </p>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -370,30 +493,40 @@ const Progress = () => {
         <Card className="medical-card mt-8">
           <CardHeader>
             <CardTitle>Recomendaciones Personalizadas</CardTitle>
-            <p className="text-sm text-muted-foreground">Basado en tu rendimiento actual</p>
+            <p className="text-sm text-muted-foreground">
+              {recommendations?.has_llm ? "Generado por IA basado en tu rendimiento" : "Basado en tu rendimiento actual"}
+            </p>
           </CardHeader>
           <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {recommendations.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Sin recomendaciones disponibles.</p>
-                ) : recommendations.map((rec, index) => (
-                  <div
-                    key={index}
-                    className={`p-6 rounded-lg border ${
-                      rec.type === "strength"
-                        ? "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800"
-                        : "bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800"
-                    }`}
-                  >
-                    <h4 className={`font-semibold mb-3 ${rec.type === "strength" ? "text-green-900 dark:text-green-100" : "text-blue-900 dark:text-blue-100"}`}>
-                      {rec.type === "strength" ? "Fortaleza" : "Area de Mejora"}
-                    </h4>
-                    <p className={`text-sm ${rec.type === "strength" ? "text-green-800 dark:text-green-200" : "text-blue-800 dark:text-blue-200"}`}>
-                      {rec.message}
-                    </p>
+            {!recommendations ? (
+              <p className="text-sm text-muted-foreground">Cargando recomendaciones personalizadas...</p>
+            ) : recommendations.recommendations ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
+                    <p className="text-xs text-muted-foreground">Tests Completados</p>
+                    <p className="text-2xl font-bold text-primary">{recommendations.test_attempts ?? 0}</p>
                   </div>
-                ))}
+                  <div className="p-4 bg-success/5 rounded-lg border border-success/20">
+                    <p className="text-xs text-muted-foreground">Precisión General</p>
+                    <p className="text-2xl font-bold text-success">{recommendations.overall_accuracy != null ? recommendations.overall_accuracy.toFixed(1) : "0.0"}%</p>
+                  </div>
+                  {(recommendations.weak_areas?.length ?? 0) > 0 && (
+                    <div className="p-4 bg-warning/5 rounded-lg border border-warning/20">
+                      <p className="text-xs text-muted-foreground">Áreas de Mejora</p>
+                      <p className="text-sm font-semibold text-warning">{recommendations.weak_areas?.length ?? 0}</p>
+                    </div>
+                  )}
+                </div>
+                <div className="p-6 bg-secondary/50 rounded-lg border border-primary/10 text-sm text-muted-foreground">
+                  <div 
+                    dangerouslySetInnerHTML={{ __html: recommendations.recommendations }}
+                  />
+                </div>
               </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">Sin recomendaciones disponibles. Completa más tests para obtener análisis personalizados.</p>
+            )}
           </CardContent>
         </Card>
         </div>

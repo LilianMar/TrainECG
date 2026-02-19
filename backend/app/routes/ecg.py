@@ -18,6 +18,8 @@ from app.routes.users import get_current_user
 from app.schemas.ecg import ECGClassificationResponse, WindowCoordinate
 from app.services.ecg_service import ECGService
 from app.services.achievement_service import AchievementService
+from app.services.progress_service import ProgressService
+from app.services.llm_service import LLMService
 from app.utils import (
     get_file_size_mb,
     get_logger,
@@ -110,7 +112,13 @@ async def classify_ecg(
                 )
             )
 
-        llm_explanation = f"Explanation for {main_class}"
+        # Generate LLM explanation for the classification
+        llm_explanation = LLMService.generate_ecg_explanation(
+            predicted_class=main_class,
+            confidence=float(main_confidence),
+            affected_windows=len(affected_windows),
+            user_skill_level=current_user.skill_level or 2,
+        )
         processing_time_ms = int((time.perf_counter() - start_time) * 1000)
 
         classification = ECGService.create_classification(
@@ -128,10 +136,17 @@ async def classify_ecg(
         )
 
         # Check and unlock achievements
-        achievement_service = AchievementService(db)
-        newly_unlocked = achievement_service.check_and_unlock_badges(
+        newly_unlocked = AchievementService.check_and_unlock_badges(
+            db=db,
             user_id=current_user.id,
             test_attempt_id=classification.id
+        )
+
+        # Update progress - increment ECGs analyzed
+        ProgressService.update_progress(
+            db=db,
+            user_id=current_user.id,
+            ecgs_analyzed=1
         )
 
         logger.info(
