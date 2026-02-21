@@ -70,14 +70,15 @@ class ModelManager:
             class_idx = np.argmax(prediction[0])
             confidence = float(prediction[0][class_idx])
 
-            # Map index to class name (6 classes based on model output)
+            # Map index to class name (MIT-BIH beat types)
+            # Model has 6 outputs, though typically uses 5 main classes
             class_names = [
-                "normal",
-                "atrial_fibrillation",
-                "ventricular_tachycardia",
-                "av_block",
-                "atrial_flutter",
-                "sinus_bradycardia",  # 6th class
+                "normal",                      # 0: Normal beat
+                "supraventricular_ectopic",   # 1: Supraventricular ectopic beat
+                "ventricular_ectopic",        # 2: Ventricular ectopic beat
+                "fusion",                      # 3: Fusion beat
+                "unknown",                     # 4: Unknown beat
+                "paced",                       # 5: Paced beat (additional class)
             ]
             
             # Safety check for index

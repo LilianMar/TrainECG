@@ -159,15 +159,15 @@ Responde en HTML simple (divs y párrafos). Máximo 300 tokens. Sé conciso, pr�
                 5: "un experto cardiólogo",
             }
 
-            prompt = f"""Eres un cardiólogo especialista en interpretacion de ECG. Acaba de clasificarse la siguiente arritmia en un ECG: {predicted_class.replace('_', ' ').title()}.
+            prompt = f"""Eres un cardiólogo especialista en interpretación de ECG. Se ha clasificado el siguiente tipo de latido cardíaco: {predicted_class.replace('_', ' ').title()}.
 
 DATOS DEL ANÁLISIS:
-- Clasificación predicha: {predicted_class.replace('_', ' ').title()}
+- Tipo de latido detectado: {predicted_class.replace('_', ' ').title()}
 - Confianza del modelo: {confidence*100:.1f}%
-- Ventanas afectadas: {affected_windows}
+- Ventanas con este tipo de latido: {affected_windows}
 - Nivel del estudiante: {skill_descriptions.get(user_skill_level, 'estudiante')}
 
-Proporciona una BREVE pero COMPLETA explicación de qué es esta arritmia, por qué el modelo la detectó y tips para identificarla en futuros ECGs.
+Proporciona una BREVE pero COMPLETA explicación de qué caracteriza este tipo de latido, su significado clínico y tips para identificarlo en ECGs.
 Adapta el lenguaje al nivel del estudiante.
 
 Responde en HTML simple. Máximo 300 tokens."""
@@ -235,11 +235,12 @@ Responde en HTML simple. Máximo 300 tokens."""
     ) -> str:
         """Fallback ECG explanation when OpenAI is unavailable."""
         class_descriptions = {
-            "normal": "Ritmo sinusal normal",
-            "atrial_fibrillation": "Fibrilación auricular (disrupciones irregulares)",
-            "ventricular_tachycardia": "Taquicardia ventricular (frecuencia rápida)",
-            "av_block": "Bloqueo AV (conducción lenta)",
-            "atrial_flutter": "Flutter auricular (ondas rápidas regulares)",
+            "normal": "Latido normal (Normal beat)",
+            "supraventricular_ectopic": "Latido ectópico supraventricular (origen auricular)",
+            "ventricular_ectopic": "Latido ectópico ventricular (origen ventricular)",
+            "fusion": "Latido de fusión (activación simultánea)",
+            "unknown": "Latido desconocido o no clasificable",
+            "paced": "Latido marcapasos",
         }
         
         description = class_descriptions.get(

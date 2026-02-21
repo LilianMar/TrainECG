@@ -11,13 +11,13 @@ import enum
 
 
 class ArrhythmiaClassEnum(str, enum.Enum):
-    """Enum for arrhythmia classes."""
+    """Enum for ECG beat classifications."""
     NORMAL = "normal"
-    ATRIAL_FIBRILLATION = "atrial_fibrillation"
-    VENTRICULAR_TACHYCARDIA = "ventricular_tachycardia"
-    AV_BLOCK = "av_block"
-    ATRIAL_FLUTTER = "atrial_flutter"
-    SINUS_BRADYCARDIA = "sinus_bradycardia"
+    SUPRAVENTRICULAR_ECTOPIC = "supraventricular_ectopic"
+    VENTRICULAR_ECTOPIC = "ventricular_ectopic"
+    FUSION = "fusion"
+    UNKNOWN = "unknown"
+    PACED = "paced"
 
 
 class ECGClassification(Base):
