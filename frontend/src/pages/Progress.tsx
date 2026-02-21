@@ -220,7 +220,7 @@ const Progress = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Precisión Total</p>
+                  <p className="text-sm text-muted-foreground">Precisión Total en Test</p>
                   <p className="text-2xl font-bold text-success">
                     {progressData?.total_practice_attempts && progressData.total_practice_attempts > 0
                       ? Math.round((progressData.total_practice_correct / progressData.total_practice_attempts) * 100)
@@ -492,40 +492,84 @@ const Progress = () => {
         {/* Personalized Recommendations */}
         <Card className="medical-card mt-8">
           <CardHeader>
-            <CardTitle>Recomendaciones Personalizadas</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              {recommendations?.has_llm ? "Generado por IA basado en tu rendimiento" : "Basado en tu rendimiento actual"}
-            </p>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <TrendingUp className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <CardTitle>Recomendaciones Personalizadas</CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {recommendations?.has_llm ? "Análisis generado por IA basado en tu rendimiento" : "Análisis basado en tu rendimiento actual"}
+                </p>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             {!recommendations ? (
-              <p className="text-sm text-muted-foreground">Cargando recomendaciones personalizadas...</p>
+              <div className="flex items-center justify-center h-[200px]">
+                <p className="text-sm text-muted-foreground">Cargando recomendaciones personalizadas...</p>
+              </div>
             ) : recommendations.recommendations ? (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
-                    <p className="text-xs text-muted-foreground">Tests Completados</p>
-                    <p className="text-2xl font-bold text-primary">{recommendations.test_attempts ?? 0}</p>
+                  <div className="p-4 bg-gradient-to-br from-primary/5 to-primary/10 rounded-lg border border-primary/20 hover:border-primary/40 transition-colors">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Target className="w-4 h-4 text-primary" />
+                      <p className="text-xs font-medium text-muted-foreground">Tests Completados</p>
+                    </div>
+                    <p className="text-3xl font-bold text-primary">{recommendations.test_attempts ?? 0}</p>
                   </div>
-                  <div className="p-4 bg-success/5 rounded-lg border border-success/20">
-                    <p className="text-xs text-muted-foreground">Precisión General</p>
-                    <p className="text-2xl font-bold text-success">{recommendations.overall_accuracy != null ? recommendations.overall_accuracy.toFixed(1) : "0.0"}%</p>
+                  <div className="p-4 bg-gradient-to-br from-success/5 to-success/10 rounded-lg border border-success/20 hover:border-success/40 transition-colors">
+                    <div className="flex items-center gap-2 mb-2">
+                      <TrendingUp className="w-4 h-4 text-success" />
+                      <p className="text-xs font-medium text-muted-foreground">Precisión General</p>
+                    </div>
+                    <p className="text-3xl font-bold text-success">{recommendations.overall_accuracy != null ? recommendations.overall_accuracy.toFixed(1) : "0.0"}%</p>
                   </div>
                   {(recommendations.weak_areas?.length ?? 0) > 0 && (
-                    <div className="p-4 bg-warning/5 rounded-lg border border-warning/20">
-                      <p className="text-xs text-muted-foreground">Áreas de Mejora</p>
-                      <p className="text-sm font-semibold text-warning">{recommendations.weak_areas?.length ?? 0}</p>
+                    <div className="p-4 bg-gradient-to-br from-warning/5 to-warning/10 rounded-lg border border-warning/20 hover:border-warning/40 transition-colors">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Zap className="w-4 h-4 text-warning" />
+                        <p className="text-xs font-medium text-muted-foreground">Áreas de Mejora</p>
+                      </div>
+                      <p className="text-3xl font-bold text-warning">{recommendations.weak_areas?.length ?? 0}</p>
                     </div>
                   )}
                 </div>
-                <div className="p-6 bg-secondary/50 rounded-lg border border-primary/10 text-sm text-muted-foreground">
-                  <div 
-                    dangerouslySetInnerHTML={{ __html: recommendations.recommendations }}
-                  />
+
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-foreground">Análisis y Sugerencias</h3>
+                  <div className="p-6 bg-gradient-to-br from-blue-50/50 to-cyan-50/30 dark:from-blue-950/10 dark:to-cyan-950/10 rounded-lg border border-blue-200/30 dark:border-blue-800/30">
+                    <div 
+                      className="text-sm text-muted-foreground leading-relaxed [&>p]:mb-3 [&>ul]:ml-4 [&>ul]:space-y-2 [&>ol]:ml-4 [&>ol]:space-y-2 [&_li]:mb-1 [&_strong]:font-semibold [&_strong]:text-primary [&_em]:italic"
+                      dangerouslySetInnerHTML={{ __html: recommendations.recommendations.replace(/^[\p{Emoji}]+\s*/u, '') }}
+                    />
+                  </div>
                 </div>
+
+                {(recommendations.weak_areas?.length ?? 0) > 0 && (
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-semibold text-foreground">Enfoque tu estudio en:</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {recommendations.weak_areas?.map((area, index) => (
+                        <div 
+                          key={index}
+                          className="p-3 bg-warning/5 rounded-lg border border-warning/20 border-l-4 border-l-warning hover:bg-warning/10 transition-colors"
+                        >
+                          <p className="text-sm font-medium text-foreground capitalize">
+                            {area.replace(/_/g, " ")}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">Sin recomendaciones disponibles. Completa más tests para obtener análisis personalizados.</p>
+              <div className="text-center p-8">
+                <Zap className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
+                <p className="text-sm text-muted-foreground">Sin recomendaciones disponibles. Completa más tests para obtener análisis personalizados.</p>
+              </div>
             )}
           </CardContent>
         </Card>

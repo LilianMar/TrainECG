@@ -80,7 +80,7 @@ class LLMService:
                         if q:
                             incorrect_summary += f"  • {q[:100]}...\n"
 
-            prompt = f"""Eres un cardiólogo educador especializado en formación de ECG. 
+            prompt = f"""Eres un cardiólogo educador especializado en interpretacion de ECG. 
 Un estudiante ha estado practicando y completó {test_attempts} tests con una precisión general del {accuracy:.1f}%.
 
 DESEMPEÑO POR ARRITMIA:
@@ -90,7 +90,7 @@ DESEMPEÑO POR ARRITMIA:
 {', '.join(weak_areas) if weak_areas else "Progreso consistente en todas las áreas"}
 {incorrect_summary}
 
-Por favor, proporciona recomendaciones ESPECÍFICAS y MOTIVADORAS basadas en los errores identificados para:
+Por favor, proporciona recomendaciones ESPECÍFICAS y MOTIVADORAS basadas en las areas con mayor inicdencia de errores para:
 1. Conceptos clave a reforzar en las áreas débiles
 2. Estrategias de estudio específicas para los tópicos problemáticos
 3. Próximos pasos recomendados
@@ -111,8 +111,8 @@ Responde en HTML simple (divs y párrafos). Máximo 300 tokens. Sé conciso, pr�
             )
 
             return f"""
-<div style="margin: 20px 0; padding: 15px; background: #f0f8ff; border-radius: 8px;">
-    <h3>🎯 Recomendaciones Personalizadas</h3>
+<div style="margin: 20px 0; padding: 15px; border-radius: 8px;">
+    
     {response.choices[0].message.content}
 </div>
 """
@@ -159,7 +159,7 @@ Responde en HTML simple (divs y párrafos). Máximo 300 tokens. Sé conciso, pr�
                 5: "un experto cardiólogo",
             }
 
-            prompt = f"""Eres un cardiólogo especialista en ECG. Acaba de clasificarse un ECG como: {predicted_class.replace('_', ' ').title()}.
+            prompt = f"""Eres un cardiólogo especialista en interpretacion de ECG. Acaba de clasificarse la siguiente arritmia en un ECG: {predicted_class.replace('_', ' ').title()}.
 
 DATOS DEL ANÁLISIS:
 - Clasificación predicha: {predicted_class.replace('_', ' ').title()}
@@ -167,7 +167,7 @@ DATOS DEL ANÁLISIS:
 - Ventanas afectadas: {affected_windows}
 - Nivel del estudiante: {skill_descriptions.get(user_skill_level, 'estudiante')}
 
-Proporciona una BREVE pero COMPLETA explicación de qué es esta arritmia y por qué el modelo la detectó.
+Proporciona una BREVE pero COMPLETA explicación de qué es esta arritmia, por qué el modelo la detectó y tips para identificarla en futuros ECGs.
 Adapta el lenguaje al nivel del estudiante.
 
 Responde en HTML simple. Máximo 300 tokens."""
@@ -177,7 +177,7 @@ Responde en HTML simple. Máximo 300 tokens."""
                 messages=[
                     {
                         "role": "system",
-                        "content": "Eres un cardiólogo especialista educador. Explica claros y adapta al nivel del estudiante.",
+                        "content": "Eres un cardiólogo especialista educador. Explica claro y adapta al nivel del estudiante.",
                     },
                     {"role": "user", "content": prompt},
                 ],
@@ -186,8 +186,8 @@ Responde en HTML simple. Máximo 300 tokens."""
             )
 
             return f"""
-<div style="margin: 15px 0; padding: 12px; background: #fff8f0; border-left: 4px solid #ff9800;">
-    <h4>📋 Explicación Detallada</h4>
+<div style="margin: 15px 0; padding: 12px; border-left: 4px solid #ff9800;">
+    <h4>Explicación Detallada</h4>
     {response.choices[0].message.content}
     <p style="font-size: 12px; color: #666; margin-top: 10px;">
         Confianza del modelo: {confidence*100:.1f}%
@@ -212,12 +212,12 @@ Responde en HTML simple. Máximo 300 tokens."""
         """Fallback when OpenAI is unavailable."""
         return f"""
 <div style="margin: 20px 0;">
-    <h3>🎯 Recomendaciones (Asistente Local)</h3>
+    <h3> Recomendaciones (Asistente Local)</h3>
     <p>Has completado <strong>{test_attempts} tests</strong> con una precisión del <strong>{accuracy:.1f}%</strong>.</p>
     
-    {f'<p style="color: red;"><strong>⚠️ Áreas a mejorar:</strong> {", ".join(s.replace("_", " ").title() for s in weak_areas)}</p>' if weak_areas else '<p style="color: green;"><strong>✓ Buen desempeño</strong> en todas las áreas.</p>'}
+    {f'<p style="color: red;"><strong>Áreas a mejorar:</strong> {", ".join(s.replace("_", " ").title() for s in weak_areas)}</p>' if weak_areas else '<p style="color: green;"><strong>✓ Buen desempeño</strong> en todas las áreas.</p>'}
     
-    <h3>📚 Próximos Pasos</h3>
+    <h3> Próximos Pasos</h3>
     <ul>
         <li>Continúa practicando con los temas débiles</li>
         <li>Realiza otro test diagnóstico en 1-2 semanas</li>
@@ -248,8 +248,8 @@ Responde en HTML simple. Máximo 300 tokens."""
         )
         
         return f"""
-<div style="margin: 15px 0; padding: 12px; background: #fff8f0; border-left: 4px solid #ff9800;">
-    <h4>📋 Resultado de Clasificación</h4>
+<div style="margin: 15px 0; padding: 12px; border-left: 4px solid #ff9800;">
+    <h4> Resultado de Clasificación</h4>
     <p><strong>Diagnóstico:</strong> {description}</p>
     <p><strong>Confianza:</strong> {confidence*100:.1f}%</p>
     <p><strong>Ventanas afectadas:</strong> {affected_windows}</p>
@@ -262,12 +262,135 @@ Responde en HTML simple. Máximo 300 tokens."""
         skill_level: int,
         previous_level: Optional[int] = None,
     ) -> dict:
-        """Legacy method for backward compatibility."""
-        return {
-            "success": True,
-            "recommendations": LLMService._fallback_progress_recommendations(
-                {}, 0, 0, []
-            ),
-        }
+        """
+        Generate LLM-based study recommendations for test evaluation.
+
+        Args:
+            wrong_questions: List of question dicts answered incorrectly
+            skill_level: User's current skill level (1-5)
+            previous_level: Prior skill level, if available
+        """
+        client_instance = LLMService._ensure_client()
+
+        arrhythmias_to_review = sorted({
+            q.get("correct_class", "unknown")
+            for q in wrong_questions
+            if q.get("correct_class")
+        })
+
+        if not client_instance:
+            logger.warning("OpenAI API key not configured. Using fallback test recommendations.")
+            return {
+                "success": True,
+                "recommendations": LLMService._fallback_test_recommendations(
+                    wrong_questions, skill_level, previous_level
+                ),
+                "arrhythmias_to_review": arrhythmias_to_review,
+            }
+
+        try:
+            skill_descriptions = {
+                1: "principiante",
+                2: "intermedio",
+                3: "intermedio",
+                4: "avanzado",
+                5: "experto",
+            }
+
+            errors_by_type = {}
+            for question in wrong_questions:
+                arr_type = question.get("correct_class", "unknown")
+                if arr_type not in errors_by_type:
+                    errors_by_type[arr_type] = []
+                if question.get("question_text"):
+                    errors_by_type[arr_type].append(question.get("question_text"))
+
+            wrong_summary = ""
+            for arr_type, questions in errors_by_type.items():
+                wrong_summary += f"\n- {arr_type.replace('_', ' ').title()}:"
+                for text in questions[:3]:
+                    wrong_summary += f"\n  • {text[:160]}..."
+
+            prompt = f"""Eres un cardiólogo educador especializado en interpretacion de ECG.
+El estudiante acaba de completar un test de evaluacion.
+
+DATOS DEL ESTUDIANTE:
+- Nivel actual: {skill_level}/5 ({skill_descriptions.get(skill_level, 'intermedio')})
+- Nivel previo: {previous_level}/5""" if previous_level is not None else f"""Eres un cardiólogo educador especializado en interpretacion de ECG.
+El estudiante acaba de completar un test de evaluacion.
+
+DATOS DEL ESTUDIANTE:
+- Nivel actual: {skill_level}/5 ({skill_descriptions.get(skill_level, 'intermedio')})"""
+
+            prompt += f"""
+
+PREGUNTAS RESPONDIDAS INCORRECTAMENTE (resumen por arritmia):
+{wrong_summary if wrong_summary else "Sin errores registrados."}
+
+Genera recomendaciones ESPECIFICAS y accionables con foco en las debilidades:
+1) Conceptos clinicos clave a reforzar
+2) Pautas concretas para identificar la arritmia en ECG
+3) Ejercicios o practica sugerida
+
+Responde en HTML simple (divs y parrafos). Maximo 300 tokens. Sin emojis."""
+
+            response = client_instance.chat.completions.create(
+                model=settings.OPENAI_MODEL,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "Eres un experto cardiólogo educador. Da recomendaciones prácticas y motivadoras basadas en errores concretos.",
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0.6,
+                max_tokens=300,
+            )
+
+            return {
+                "success": True,
+                "recommendations": response.choices[0].message.content,
+                "arrhythmias_to_review": arrhythmias_to_review,
+            }
+        except APIError as exc:
+            logger.error(f"OpenAI API error: {str(exc)}")
+            return {
+                "success": True,
+                "recommendations": LLMService._fallback_test_recommendations(
+                    wrong_questions, skill_level, previous_level
+                ),
+                "arrhythmias_to_review": arrhythmias_to_review,
+            }
+
+    @staticmethod
+    def _fallback_test_recommendations(
+        wrong_questions: List[dict],
+        skill_level: int,
+        previous_level: Optional[int] = None,
+    ) -> str:
+        """Fallback recommendations for test evaluation."""
+        arrhythmias = sorted({
+            q.get("correct_class", "unknown")
+            for q in wrong_questions
+            if q.get("correct_class")
+        })
+        arrhythmias_text = ", ".join(
+            a.replace("_", " ").title() for a in arrhythmias
+        ) if arrhythmias else "Sin areas especificas detectadas"
+
+        previous_text = f" (nivel previo {previous_level}/5)" if previous_level is not None else ""
+
+        return f"""
+<div style="margin: 12px 0;">
+    <p><strong>Nivel actual:</strong> {skill_level}/5{previous_text}</p>
+    <p><strong>Areas a reforzar:</strong> {arrhythmias_text}</p>
+    <p><strong>Sugerencias:</strong></p>
+    <ul>
+        <li>Repasa los criterios diagnosticos de las arritmias con mayor error.</li>
+        <li>Comparte trazos normales vs. patologicos y practica la diferenciacion.</li>
+        <li>Realiza otro test tras estudiar los temas marcados.</li>
+    </ul>
+</div>
+"""
 
 

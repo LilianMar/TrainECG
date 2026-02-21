@@ -207,19 +207,19 @@ class ECGService:
         Calculate skill level based on accuracy percentage.
         
         Levels:
-        - 1: 0-40% (Beginner)
-        - 2: 41-60% (Developing)
-        - 3: 61-75% (Intermediate)
-        - 4: 76-90% (Advanced)
-        - 5: 91-100% (Expert)
+        - 1: 0-20% (Beginner)
+        - 2: 21-40% (Developing)
+        - 3: 41-60% (Intermediate)
+        - 4: 61-80% (Advanced)
+        - 5: 81-100% (Expert)
         """
-        if accuracy >= 91:
+        if accuracy >= 81:
             return 5
-        elif accuracy >= 76:
-            return 4
         elif accuracy >= 61:
-            return 3
+            return 4
         elif accuracy >= 41:
+            return 3
+        elif accuracy >= 21:
             return 2
         else:
             return 1

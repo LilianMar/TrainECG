@@ -228,31 +228,45 @@ async def post_practice_test(
         total_attempts = 0
         question_answers = []  # Track question IDs and correctness for arrhythmia breakdown
 
+        logger.info(f"Processing {len(answers)} answers for {len(test_questions)} test questions")
+
         for answer in answers:
             question_id = answer.get("question_id")
             selected_answer = answer.get("selected_answer")
 
-            # Find the question in test_questions
-            question = next(
-                (q for q in test_questions if q.get("id") == question_id), None
-            )
-
-            if not question:
+            # Get the correct answer directly from database, not from test_questions
+            # (test_questions from frontend may not have correct_answer field)
+            question_from_db = ECGService.get_practice_question(db, question_id)
+            
+            if not question_from_db:
+                logger.warning(f"Question {question_id} not found in database")
                 continue
 
-            is_correct = selected_answer == question.get("correct_answer")
+            correct_answer = question_from_db.correct_answer
+            is_correct = selected_answer == correct_answer
             total_attempts += 1
+
+            logger.info(
+                f"Question {question_id}: selected={selected_answer}, correct_from_db={correct_answer}, is_correct={is_correct}"
+            )
 
             if is_correct:
                 score += 1
             else:
-                wrong_questions.append(question)
+                # Use question from DB for wrong_questions
+                wrong_questions.append({
+                    "id": question_from_db.id,
+                    "question_text": question_from_db.question_text,
+                    "correct_class": question_from_db.correct_class,
+                    "correct_answer": question_from_db.correct_answer,
+                    "explanation": question_from_db.explanation
+                })
 
             # Track this question answer for arrhythmia breakdown
             question_answers.append({
                 "question_id": question_id,
                 "is_correct": is_correct,
-                "correct_class": question.get("correct_class", "unknown")
+                "correct_class": question_from_db.correct_class
             })
 
             # Record attempt
@@ -281,15 +295,25 @@ async def post_practice_test(
         # Update progress
         progress = ProgressService.get_or_create_progress(db, current_user.id)
         previous_level = current_user.skill_level
+        
+        logger.info(
+            f"Post-practice test scoring: score={score}/{total} (accuracy={accuracy:.1f}%), "
+            f"new_skill_level={new_skill_level}, previous_level={previous_level}"
+        )
+
         progress.post_practice_tests_taken += 1
         progress.post_practice_score = accuracy
         progress.post_practice_level_achieved = new_skill_level
 
-        # Update user skill level if improved
-        if new_skill_level > current_user.skill_level:
-            current_user.skill_level = new_skill_level
+        # Update user skill level to the new level from this test
+        current_user.skill_level = new_skill_level
+        if previous_level is None:
             logger.info(
-                f"User {current_user.id} leveled up from {previous_level} to {new_skill_level}"
+                f"User {current_user.id} assigned initial level {new_skill_level} from post-practice test"
+            )
+        elif new_skill_level != previous_level:
+            logger.info(
+                f"User {current_user.id} level updated from {previous_level} to {new_skill_level}"
             )
 
         db.add(progress)

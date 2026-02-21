@@ -33,6 +33,7 @@ const PostPracticeTest = () => {
     explanation: string;
     correct_class: string;
   } | null>(null);
+  const [answersByQuestion, setAnswersByQuestion] = useState<Record<number, number>>({});
   const [questionStartedAt, setQuestionStartedAt] = useState<number>(Date.now());
   const [testCompleted, setTestCompleted] = useState(false);
   const [testResults, setTestResults] = useState<any>(null);
@@ -70,6 +71,7 @@ const PostPracticeTest = () => {
       setAnswerFeedback(null);
       setScore(0);
       setTestCompleted(false);
+      setAnswersByQuestion({});
       setQuestionStartedAt(Date.now());
     } catch (error) {
       console.error("Error loading questions:", error);
@@ -91,6 +93,12 @@ const PostPracticeTest = () => {
   const handleAnswerSelect = (optionIndex: number) => {
     if (!showFeedback) {
       setSelectedAnswer(optionIndex);
+      if (currentQ?.id != null) {
+        setAnswersByQuestion((prev) => ({
+          ...prev,
+          [currentQ.id]: optionIndex,
+        }));
+      }
     }
   };
 
@@ -138,8 +146,10 @@ const PostPracticeTest = () => {
 
   const handleNextQuestion = () => {
     if (currentQuestion < questions.length - 1) {
-      setCurrentQuestion(currentQuestion + 1);
-      setSelectedAnswer(null);
+      const nextIndex = currentQuestion + 1;
+      const nextQuestionId = questions[nextIndex]?.id;
+      setCurrentQuestion(nextIndex);
+      setSelectedAnswer(nextQuestionId != null ? answersByQuestion[nextQuestionId] ?? null : null);
       setShowFeedback(false);
       setAnswerFeedback(null);
       setQuestionStartedAt(Date.now());
@@ -151,12 +161,14 @@ const PostPracticeTest = () => {
   const handleSubmitTest = async () => {
     setIsSubmittingTest(true);
     try {
-      // Prepare answers with questions for backend
-      const answers = questions.map((q, index) => ({
-        question_id: q.id,
-        selected_answer: index === currentQuestion ? selectedAnswer : 0, // Simplified
-        time_spent_seconds: 30, // Average
-      }));
+      // Prepare answers - only include questions that were actually answered
+      const answers = questions
+        .filter((q) => q.id in answersByQuestion) // Only answered questions
+        .map((q) => ({
+          question_id: q.id,
+          selected_answer: answersByQuestion[q.id],
+          time_spent_seconds: 30, // Average
+        }));
 
       const response = await apiRequest<any>("/practice/post-practice-test", {
         method: "POST",
@@ -198,9 +210,8 @@ const PostPracticeTest = () => {
   }
 
   if (testResults) {
-    const { previous_level, new_level, level_improved, recommendations } = testResults;
-    // Calcular precisión localmente basándose en el score
-    const accuracy = questions.length > 0 ? (score / questions.length) * 100 : 0;
+    const { previous_level, new_level, level_improved, recommendations, accuracy } = testResults;
+    // Usar accuracy devuelto por el backend (cálculo correcto con respuestas reales)
 
     return (
       <div className="min-h-screen bg-background">
