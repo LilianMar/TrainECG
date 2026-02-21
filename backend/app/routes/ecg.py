@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.database import get_db
-from app.ml_pipeline import get_gradcam, get_model_manager, get_preprocessor
+from app.ml_pipeline import get_gradcam, get_model_manager, get_preprocessor, get_image_annotator
 from app.models.user import User
 from app.routes.users import get_current_user
 from app.schemas.ecg import ECGClassificationResponse, WindowCoordinate
@@ -99,6 +99,8 @@ async def classify_ecg(
         grad_cam = get_gradcam(model)
 
         gradcam_windows: list[WindowCoordinate] = []
+        affected_windows_data: list[tuple[int, int, int, int, float]] = []  # For annotation
+        
         for window_idx, conf in affected_windows:
             x, y = coordinates[window_idx]
             # heatmap = grad_cam.compute_gradcam(windows[window_idx])
@@ -111,6 +113,20 @@ async def classify_ecg(
                     confidence=float(conf),
                 )
             )
+            # Add to annotation data (x, y, width, height, confidence)
+            affected_windows_data.append((x, y, settings.WINDOW_SIZE, settings.WINDOW_SIZE, conf))
+
+        # Create annotated image with bounding boxes
+        annotated_image_base64 = None
+        if affected_windows_data:
+            try:
+                image_annotator = get_image_annotator()
+                _, annotated_image_base64 = image_annotator.create_annotated_image_base64(
+                    str(upload_path), affected_windows_data
+                )
+            except Exception as e:
+                logger.warning(f"Failed to create annotated image: {str(e)}")
+                # Continue without annotated image
 
         # Generate LLM explanation for the classification
         llm_explanation = LLMService.generate_ecg_explanation(
@@ -154,7 +170,22 @@ async def classify_ecg(
             classification.id,
             current_user.id,
         )
-        return classification
+        
+        # Build response with annotated image
+        response = ECGClassificationResponse(
+            id=classification.id,
+            predicted_class=classification.predicted_class,
+            confidence=classification.confidence,
+            windows_analyzed=classification.windows_analyzed,
+            affected_windows=classification.affected_windows,
+            gradcam_windows=gradcam_windows,
+            annotated_image=annotated_image_base64,
+            llm_explanation=classification.llm_explanation,
+            processing_time_ms=classification.processing_time_ms,
+            created_at=classification.created_at,
+        )
+        
+        return response
     except HTTPException:
         raise
     except Exception as exc:

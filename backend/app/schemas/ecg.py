@@ -30,6 +30,7 @@ class ECGClassificationResponse(BaseModel):
     windows_analyzed: int
     affected_windows: int
     gradcam_windows: List[WindowCoordinate]
+    annotated_image: Optional[str] = None  # Base64 image with bounding boxes
     llm_explanation: str
     processing_time_ms: int
     created_at: datetime
