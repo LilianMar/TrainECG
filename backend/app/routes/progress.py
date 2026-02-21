@@ -24,13 +24,41 @@ async def get_user_progress(
     current_user: User = Depends(get_current_user),
 ):
     """Get user's progress overview."""
+    import json
+    
     progress = ProgressService.get_or_create_progress(db, current_user.id)
+    
+    # Calculate test accuracy (excluding 'unknown' classifications)
+    post_tests = db.query(PostPracticeTest).filter(
+        PostPracticeTest.user_id == current_user.id
+    ).all()
+    
+    test_correct = 0
+    test_total = 0
+    for test in post_tests:
+        if test.question_answers:
+            try:
+                question_answers = json.loads(test.question_answers)
+                for qa in question_answers:
+                    correct_class = qa.get("correct_class", "unknown")
+                    if correct_class != "unknown":
+                        test_total += 1
+                        if qa.get("is_correct"):
+                            test_correct += 1
+            except json.JSONDecodeError:
+                pass
+    
+    test_accuracy = int((test_correct / test_total) * 100) if test_total > 0 else 0
+    
     return {
         "total_ecgs_analyzed": progress.total_ecgs_analyzed,
         "classification_accuracy": progress.classification_accuracy,
         "total_practice_attempts": progress.total_practice_attempts,
         "practice_accuracy": progress.practice_accuracy,
         "total_practice_correct": progress.total_practice_correct,
+        "test_accuracy": test_accuracy,
+        "test_correct": test_correct,
+        "test_total": test_total,
         "current_streak_days": progress.current_streak_days,
         "longest_streak_days": progress.longest_streak_days,
         "total_achievements": progress.total_achievements,

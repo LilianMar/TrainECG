@@ -40,6 +40,9 @@ const Progress = () => {
     total_practice_attempts: number;
     practice_accuracy: number;
     total_practice_correct: number;
+    test_accuracy: number;
+    test_correct: number;
+    test_total: number;
     current_streak_days: number;
     longest_streak_days: number;
     skill_level?: number | null;
@@ -222,9 +225,7 @@ const Progress = () => {
                 <div>
                   <p className="text-sm text-muted-foreground">Precisión Total en Test</p>
                   <p className="text-2xl font-bold text-success">
-                    {progressData?.total_practice_attempts && progressData.total_practice_attempts > 0
-                      ? Math.round((progressData.total_practice_correct / progressData.total_practice_attempts) * 100)
-                      : 0}%
+                    {progressData?.test_accuracy ?? 0}%
                   </p>
                 </div>
                 <TrendingUp className="w-8 h-8 text-success" />
