@@ -70,16 +70,24 @@ class ModelManager:
             class_idx = np.argmax(prediction[0])
             confidence = float(prediction[0][class_idx])
 
-            # Map index to class name (5 classes)
+            # Map index to class name (6 classes based on model output)
             class_names = [
                 "normal",
                 "atrial_fibrillation",
                 "ventricular_tachycardia",
                 "av_block",
                 "atrial_flutter",
+                "sinus_bradycardia",  # 6th class
             ]
             
-            predicted_class = class_names[class_idx]
+            # Safety check for index
+            if class_idx >= len(class_names):
+                logger.warning(f"Model predicted unexpected class index {class_idx}. Using 'normal' as fallback.")
+                predicted_class = "normal"
+            else:
+                predicted_class = class_names[class_idx]
+            
+            logger.info(f"Prediction: class_idx={class_idx}, class={predicted_class}, confidence={confidence:.2f}")
             
             return predicted_class, confidence
         except Exception as e:
