@@ -279,21 +279,6 @@ const ClassifyECG = () => {
                     </div>
                   </CardContent>
                 </Card>
-
-                <Card className="medical-card">
-                  <CardHeader>
-                    <CardTitle>Contexto Médico Adicional</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      La fibrilación auricular es la arritmia más común en la práctica clínica, 
-                      afectando aproximadamente al 1-2% de la población general.
-                    </p>
-                    <Button variant="outline" className="w-full">
-                      Ver Información Detallada
-                    </Button>
-                  </CardContent>
-                </Card>
               </>
             ) : (
               <Card className="medical-card">

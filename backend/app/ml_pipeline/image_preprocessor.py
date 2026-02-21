@@ -82,15 +82,31 @@ class ImagePreprocessor:
 
     def normalize_image(self, image: np.ndarray) -> np.ndarray:
         """
-        Normalize image to 0-1 range.
+        Normalize image to 0-1 range with preprocessing matching training.
+        Applies GaussianBlur, normalization, and Otsu threshold.
 
         Args:
             image: Input image array
 
         Returns:
-            Normalized image
+            Normalized and preprocessed image
         """
-        return image.astype(np.float32) / 255.0
+        try:
+            # Apply Gaussian blur to reduce noise
+            blurred = cv2.GaussianBlur(image, (3, 3), 0)
+            
+            # Normalize to 0-255 range
+            normalized = cv2.normalize(blurred, None, 0, 255, cv2.NORM_MINMAX)
+            
+            # Apply Otsu's thresholding
+            _, thresholded = cv2.threshold(normalized.astype(np.uint8), 0, 255, cv2.THRESH_OTSU)
+            
+            # Scale to [0, 1] range
+            return thresholded.astype(np.float32) / 255.0
+        except Exception as e:
+            logger.error(f"Error in normalize_image: {str(e)}")
+            # Fallback to simple normalization
+            return image.astype(np.float32) / 255.0
 
     def create_sliding_windows(
         self, image: np.ndarray

@@ -170,14 +170,14 @@ DATOS DEL ANÁLISIS:
 Proporciona una BREVE pero COMPLETA explicación de qué caracteriza este tipo de latido, su significado clínico y tips para identificarlo en ECGs.
 Adapta el lenguaje al nivel del estudiante.
 
-Responde en HTML simple. Máximo 300 tokens."""
+Responde en TEXTO PLANO sin HTML. Máximo 300 tokens."""
 
             response = client_instance.chat.completions.create(
                 model=settings.OPENAI_MODEL,
                 messages=[
                     {
                         "role": "system",
-                        "content": "Eres un cardiólogo especialista educador. Explica claro y adapta al nivel del estudiante.",
+                        "content": "Eres un cardiólogo especialista educador. Explica claro y adapta al nivel del estudiante. NO uses HTML, solo texto plano.",
                     },
                     {"role": "user", "content": prompt},
                 ],
@@ -185,15 +185,11 @@ Responde en HTML simple. Máximo 300 tokens."""
                 max_tokens=settings.OPENAI_MAX_TOKENS,
             )
 
-            return f"""
-<div style="margin: 15px 0; padding: 12px; border-left: 4px solid #ff9800;">
-    <h4>Explicación Detallada</h4>
-    {response.choices[0].message.content}
-    <p style="font-size: 12px; color: #666; margin-top: 10px;">
-        Confianza del modelo: {confidence*100:.1f}%
-    </p>
-</div>
-"""
+            # Clean response from any HTML tags
+            import re
+            clean_text = re.sub(r'<[^>]+>', '', response.choices[0].message.content)
+            
+            return clean_text
 
         except APIError as e:
             logger.error(f"OpenAI API error: {str(e)}")
@@ -235,27 +231,20 @@ Responde en HTML simple. Máximo 300 tokens."""
     ) -> str:
         """Fallback ECG explanation when OpenAI is unavailable."""
         class_descriptions = {
-            "normal": "Latido normal (Normal beat)",
-            "supraventricular_ectopic": "Latido ectópico supraventricular (origen auricular)",
-            "ventricular_ectopic": "Latido ectópico ventricular (origen ventricular)",
-            "fusion": "Latido de fusión (activación simultánea)",
-            "unknown": "Latido desconocido o no clasificable",
-            "paced": "Latido marcapasos",
+            "normal": "Latido Normal: Representa un ritmo cardíaco sinusal regular, sin alteraciones en la conducción eléctrica. Es el patrón esperado en un corazón sano.",
+            "supraventricular_ectopic": "Latido Ectópico Supraventricular: Latido prematuro originado en las aurículas o nodo AV. Generalmente benigno, pero puede indicar irritabilidad auricular.",
+            "ventricular_ectopic": "Latido Ectópico Ventricular: Latido prematuro originado en los ventrículos. Requiere evaluación clínica, especialmente si es frecuente o con patrón anormal.",
+            "fusion": "Latido de Fusión: Resultado de activación simultánea desde dos focos diferentes. Indica conducción eléctrica compleja.",
+            "unknown": "Latido No Clasificable: Patrón atípico o con artefactos que dificultan la clasificación precisa.",
+            "paced": "Latido con Marcapasos: Ritmo generado o asistido por dispositivo de estimulación cardíaca artificial.",
         }
         
         description = class_descriptions.get(
             predicted_class, 
-            predicted_class.replace("_", " ").title()
+            f"{predicted_class.replace('_', ' ').title()}: Tipo de latido detectado por el modelo."
         )
         
-        return f"""
-<div style="margin: 15px 0; padding: 12px; border-left: 4px solid #ff9800;">
-    <h4> Resultado de Clasificación</h4>
-    <p><strong>Diagnóstico:</strong> {description}</p>
-    <p><strong>Confianza:</strong> {confidence*100:.1f}%</p>
-    <p><strong>Ventanas afectadas:</strong> {affected_windows}</p>
-</div>
-"""
+        return f"{description}\\n\\nConfianza del análisis: {confidence*100:.1f}%\\nVentanas con este patrón: {affected_windows}"
 
     @staticmethod
     def generate_recommendations(
