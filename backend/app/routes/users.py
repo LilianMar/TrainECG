@@ -119,14 +119,36 @@ async def get_user_stats(
     # Average accuracy from post-practice tests (if available)
     # Otherwise fallback to practice attempts accuracy
     from app.models.ecg import PostPracticeTest
+    import json
     
-    post_practice_accuracy = db.query(func.avg(PostPracticeTest.accuracy))\
-        .filter(PostPracticeTest.user_id == current_user.id)\
-        .scalar()
+    # Get all post-practice tests
+    post_tests = db.query(PostPracticeTest).filter(
+        PostPracticeTest.user_id == current_user.id
+    ).all()
     
-    if post_practice_accuracy is not None:
-        # Use post-practice test accuracy (Precisión General from Progress)
-        avg_accuracy = int(post_practice_accuracy)
+    avg_accuracy = 0
+    if post_tests:
+        # Calculate accuracy based on valid questions (exclude "unknown" classifications)
+        total_correct = 0
+        total_questions = 0
+        
+        for test in post_tests:
+            if test.question_answers:
+                try:
+                    question_answers = json.loads(test.question_answers)
+                    for qa in question_answers:
+                        correct_class = qa.get("correct_class", "unknown")
+                        # Only count questions with valid classifications
+                        if correct_class != "unknown":
+                            total_questions += 1
+                            if qa.get("is_correct"):
+                                total_correct += 1
+                except json.JSONDecodeError:
+                    pass
+        
+        # Calculate final accuracy
+        if total_questions > 0:
+            avg_accuracy = int((total_correct / total_questions) * 100)
     else:
         # Fallback: use practice attempts accuracy
         avg_accuracy_result = db.query(func.avg(PracticeAttempt.is_correct))\
