@@ -231,23 +231,30 @@ class ProgressService:
             PostPracticeTest.user_id == user_id
         ).count()
         
-        # Calculate overall accuracy
+        # Calculate overall accuracy (both practice and test questions)
         total_correct = 0
-        total_tests = 0
+        total_questions = 0
         weak_areas = []
         
         for arrhythmia, stats in performance.items():
+            # Count practice attempts
+            practice_total = stats.get("practice_total", 0)
+            practice_correct = stats.get("practice_correct", 0)
+            
+            # Count test attempts (only valid classifications)
             test_total = stats.get("test_total", 0)
             test_correct = stats.get("test_correct", 0)
             test_accuracy = stats.get("test_accuracy", 0)
             
-            total_correct += test_correct
-            total_tests += test_total
+            # Sum both practice and test
+            total_correct += practice_correct + test_correct
+            total_questions += practice_total + test_total
             
+            # Weak areas based on test accuracy only
             if test_total > 0 and test_accuracy < 70:
                 weak_areas.append(arrhythmia)
         
-        overall_accuracy = (total_correct / total_tests * 100) if total_tests > 0 else 0
+        overall_accuracy = (total_correct / total_questions * 100) if total_questions > 0 else 0
         
         # Get incorrect answers to provide specific feedback
         incorrect_answers = ProgressService.get_incorrect_answers(db, user_id)

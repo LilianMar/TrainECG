@@ -116,45 +116,48 @@ async def get_user_stats(
         .filter(ECGClassification.user_id == current_user.id)\
         .scalar() or 0
     
-    # Average accuracy from post-practice tests (if available)
-    # Otherwise fallback to practice attempts accuracy
+    # Calculate overall accuracy from both practice and test questions
+    # Formula: (practice_correct + test_correct) / (practice_total + test_total)
     from app.models.ecg import PostPracticeTest
     import json
     
-    # Get all post-practice tests
+    # Count practice attempts
+    practice_attempts = db.query(PracticeAttempt).filter(
+        PracticeAttempt.user_id == current_user.id
+    ).all()
+    
+    practice_correct = 0
+    practice_total = 0
+    for attempt in practice_attempts:
+        practice_total += 1
+        if attempt.is_correct == "True":
+            practice_correct += 1
+    
+    # Count test attempts (only valid classifications)
     post_tests = db.query(PostPracticeTest).filter(
         PostPracticeTest.user_id == current_user.id
     ).all()
     
-    avg_accuracy = 0
-    if post_tests:
-        # Calculate accuracy based on valid questions (exclude "unknown" classifications)
-        total_correct = 0
-        total_questions = 0
-        
-        for test in post_tests:
-            if test.question_answers:
-                try:
-                    question_answers = json.loads(test.question_answers)
-                    for qa in question_answers:
-                        correct_class = qa.get("correct_class", "unknown")
-                        # Only count questions with valid classifications
-                        if correct_class != "unknown":
-                            total_questions += 1
-                            if qa.get("is_correct"):
-                                total_correct += 1
-                except json.JSONDecodeError:
-                    pass
-        
-        # Calculate final accuracy
-        if total_questions > 0:
-            avg_accuracy = int((total_correct / total_questions) * 100)
-    else:
-        # Fallback: use practice attempts accuracy
-        avg_accuracy_result = db.query(func.avg(PracticeAttempt.is_correct))\
-            .filter(PracticeAttempt.user_id == current_user.id)\
-            .scalar()
-        avg_accuracy = int((avg_accuracy_result or 0) * 100)
+    test_correct = 0
+    test_total = 0
+    for test in post_tests:
+        if test.question_answers:
+            try:
+                question_answers = json.loads(test.question_answers)
+                for qa in question_answers:
+                    correct_class = qa.get("correct_class", "unknown")
+                    # Only count questions with valid classifications
+                    if correct_class != "unknown":
+                        test_total += 1
+                        if qa.get("is_correct"):
+                            test_correct += 1
+            except json.JSONDecodeError:
+                pass
+    
+    # Calculate final accuracy from both practice and test
+    total_correct = practice_correct + test_correct
+    total_questions = practice_total + test_total
+    avg_accuracy = int((total_correct / total_questions) * 100) if total_questions > 0 else 0
     
     # Consecutive days streak
     consecutive_days = 0
