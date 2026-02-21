@@ -116,11 +116,23 @@ async def get_user_stats(
         .filter(ECGClassification.user_id == current_user.id)\
         .scalar() or 0
     
-    # Average accuracy from practice attempts
-    avg_accuracy_result = db.query(func.avg(PracticeAttempt.is_correct))\
-        .filter(PracticeAttempt.user_id == current_user.id)\
+    # Average accuracy from post-practice tests (if available)
+    # Otherwise fallback to practice attempts accuracy
+    from app.models.ecg import PostPracticeTest
+    
+    post_practice_accuracy = db.query(func.avg(PostPracticeTest.accuracy))\
+        .filter(PostPracticeTest.user_id == current_user.id)\
         .scalar()
-    avg_accuracy = int((avg_accuracy_result or 0) * 100)
+    
+    if post_practice_accuracy is not None:
+        # Use post-practice test accuracy (Precisión General from Progress)
+        avg_accuracy = int(post_practice_accuracy)
+    else:
+        # Fallback: use practice attempts accuracy
+        avg_accuracy_result = db.query(func.avg(PracticeAttempt.is_correct))\
+            .filter(PracticeAttempt.user_id == current_user.id)\
+            .scalar()
+        avg_accuracy = int((avg_accuracy_result or 0) * 100)
     
     # Consecutive days streak
     consecutive_days = 0
