@@ -95,9 +95,18 @@ class ProgressService:
             
             if question and question.correct_class:
                 arrhythmia_type = question.correct_class.lower().replace(" ", "_")
-                if arrhythmia_type in performance:
-                    performance[arrhythmia_type]["practice_total"] += 1
-                    if attempt.is_correct == "True":
+                # Initialize if not exists (for arrhythmias not in enum)
+                if arrhythmia_type not in performance:
+                    performance[arrhythmia_type] = {
+                        "practice_correct": 0,
+                        "practice_total": 0,
+                        "practice_accuracy": 0.0,
+                        "test_correct": 0,
+                        "test_total": 0,
+                        "test_accuracy": 0.0,
+                    }
+                performance[arrhythmia_type]["practice_total"] += 1
+                if attempt.is_correct == "True":
                         performance[arrhythmia_type]["practice_correct"] += 1
 
         # Calculate practice accuracies
@@ -119,10 +128,22 @@ class ProgressService:
                     question_answers = json.loads(post_test.question_answers)
                     for qa in question_answers:
                         correct_class = qa.get("correct_class", "unknown").lower().replace(" ", "_")
-                        if correct_class in performance:
-                            performance[correct_class]["test_total"] += 1
-                            if qa.get("is_correct"):
-                                performance[correct_class]["test_correct"] += 1
+                        # Skip unknown classifications
+                        if correct_class == "unknown":
+                            continue
+                        # Initialize if not exists (for arrhythmias not in enum)
+                        if correct_class not in performance:
+                            performance[correct_class] = {
+                                "practice_correct": 0,
+                                "practice_total": 0,
+                                "practice_accuracy": 0.0,
+                                "test_correct": 0,
+                                "test_total": 0,
+                                "test_accuracy": 0.0,
+                            }
+                        performance[correct_class]["test_total"] += 1
+                        if qa.get("is_correct"):
+                            performance[correct_class]["test_correct"] += 1
                 except json.JSONDecodeError:
                     # Skip if JSON is invalid
                     pass
