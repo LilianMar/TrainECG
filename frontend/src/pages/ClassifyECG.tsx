@@ -15,6 +15,7 @@ const ClassifyECG = () => {
     confidence: number;
     recommendations: string[];
     explanation: string;
+    annotated_image?: string;
   } | null>(null);
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [isDragActive, setIsDragActive] = useState(false);
@@ -83,6 +84,7 @@ const ClassifyECG = () => {
         predicted_class: string;
         confidence: number;
         llm_explanation: string;
+        annotated_image?: string;
       }>("/ecg/classify", {
         method: "POST",
         body: formData,
@@ -95,6 +97,11 @@ const ClassifyECG = () => {
         ventricular_tachycardia: "Taquicardia Ventricular",
         av_block: "Bloqueo AV",
         atrial_flutter: "Flutter Auricular",
+        supraventricular_ectopic: "Latido Ectópico Supraventricular",
+        ventricular_ectopic: "Latido Ectópico Ventricular",
+        fusion: "Latido de Fusión",
+        unknown: "Latido No Clasificable",
+        paced: "Latido con Marcapasos",
       };
 
       const arrhythmiaLabel = classLabels[response.predicted_class] ?? response.predicted_class;
@@ -108,6 +115,7 @@ const ClassifyECG = () => {
           "Consultar con un especialista si hay dudas",
         ],
         explanation: response.llm_explanation || "Sin explicacion adicional disponible.",
+        annotated_image: response.annotated_image,
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : "No se pudo analizar el ECG";
@@ -258,6 +266,25 @@ const ClassifyECG = () => {
                         Confianza: {analysisResult.confidence}%
                       </p>
                     </div>
+                    
+                    {/* Display annotated image if available */}
+                    {analysisResult.annotated_image && (
+                      <div className="p-4 bg-secondary rounded-lg">
+                        <h4 className="font-medium mb-3 text-sm">
+                          📊 ECG Analizado - Regiones de Detección Encerradas (Rectángulos Rojos)
+                        </h4>
+                        <img
+                          src={`data:image/png;base64,${analysisResult.annotated_image}`}
+                          alt="ECG Anotado con Arritmias"
+                          className="w-full h-auto rounded-lg border border-border"
+                          style={{ maxHeight: '400px', objectFit: 'contain' }}
+                        />
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Los rectángulos rojos indican las regiones donde el modelo detectó el patrón de &quot;{analysisResult.arrhythmia}&quot;.
+                          El porcentaje en cada rectángulo es la confianza del modelo para esa ventana.
+                        </p>
+                      </div>
+                    )}
                     
                     <div className="p-4 bg-secondary rounded-lg">
                       <h4 className="font-medium mb-2">Explicación Clínica:</h4>
