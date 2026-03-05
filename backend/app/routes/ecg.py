@@ -72,12 +72,18 @@ async def classify_ecg(
             )
 
         preprocessor = get_preprocessor()
-        windows, coordinates, _ = preprocessor.preprocess_pipeline(str(upload_path))
+        windows, coordinates, original_image = preprocessor.preprocess_pipeline(str(upload_path))
         if not windows:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="No valid windows extracted from image",
             )
+        
+        # Get image dimensions
+        img_height, img_width = original_image.shape[:2]
+        
+        # Window width is calculated inside preprocessor
+        window_width = min(150, img_width // 4)
 
         model_manager = get_model_manager()
         predictions: list[tuple[str, float, int]] = []
@@ -86,14 +92,22 @@ async def classify_ecg(
         for i, window in enumerate(windows):
             predicted_class, confidence = model_manager.predict(window)
             predictions.append((predicted_class, confidence, i))
-            if confidence > 0.7:
+            if confidence > 0.9:
                 affected_windows.append((i, confidence))
 
-        classes = [p[0] for p in predictions]
-        main_class = Counter(classes).most_common(1)[0][0]
-        main_confidence = (
-            sum(p[1] for p in predictions if p[0] == main_class) / len(predictions)
-        )
+        # Get most common class from HIGH-CONFIDENCE predictions only
+        if affected_windows:
+            high_conf_predictions = [predictions[i] for i, _ in affected_windows]
+            classes = [p[0] for p in high_conf_predictions]
+            main_class = Counter(classes).most_common(1)[0][0]
+            main_confidence = (
+                sum(p[1] for p in high_conf_predictions if p[0] == main_class) / len(high_conf_predictions)
+            )
+        else:
+            # Fallback: no high-confidence predictions found
+            classes = [p[0] for p in predictions]
+            main_class = Counter(classes).most_common(1)[0][0]
+            main_confidence = max(p[1] for p in predictions if p[0] == main_class)
 
         model = model_manager.get_model()
         grad_cam = get_gradcam(model)
@@ -102,21 +116,27 @@ async def classify_ecg(
         affected_windows_data: list[tuple[int, int, int, int, float]] = []  # For annotation
         
         for window_idx, conf in affected_windows:
-            x, y = coordinates[window_idx]
+            x, y_center, region_height = coordinates[window_idx]
+            
+            # Calculate rectangle boundaries in original image space
+            y_start = max(0, y_center - region_height // 2)
+            y_end = min(img_height, y_center + region_height // 2)
+            rect_height = y_end - y_start
+            
             # heatmap = grad_cam.compute_gradcam(windows[window_idx])
             gradcam_windows.append(
                 WindowCoordinate(
                     x=x,
-                    y=y,
-                    width=settings.WINDOW_SIZE,
-                    height=settings.WINDOW_SIZE,
+                    y=y_start,
+                    width=window_width,
+                    height=rect_height,
                     confidence=float(conf),
                 )
             )
             # Add to annotation data (x, y, width, height, confidence)
-            affected_windows_data.append((x, y, settings.WINDOW_SIZE, settings.WINDOW_SIZE, conf))
+            affected_windows_data.append((x, y_start, window_width, rect_height, conf))
 
-        # Create annotated image with bounding boxes
+        # Create annotated image with bounding boxes on the ORIGINAL image
         annotated_image_base64 = None
         if affected_windows_data:
             try:

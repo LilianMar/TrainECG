@@ -274,7 +274,7 @@ const ClassifyECG = () => {
                           📊 ECG Analizado - Regiones de Detección Encerradas (Rectángulos Rojos)
                         </h4>
                         <img
-                          src={`data:image/png;base64,${analysisResult.annotated_image}`}
+                          src={analysisResult.annotated_image}
                           alt="ECG Anotado con Arritmias"
                           className="w-full h-auto rounded-lg border border-border"
                           style={{ maxHeight: '400px', objectFit: 'contain' }}
