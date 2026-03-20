@@ -3,6 +3,7 @@ LLM Service - Handles interactions with OpenAI's ChatGPT API.
 """
 
 from typing import List, Optional
+from html import unescape
 from openai import OpenAI, APIError
 from app.core.config import get_settings
 from app.utils.logger import get_logger
@@ -16,6 +17,56 @@ client = OpenAI(api_key=settings.OPENAI_API_KEY) if settings.OPENAI_API_KEY else
 
 class LLMService:
     """Service for generating recommendations using ChatGPT."""
+
+    @staticmethod
+    def _clean_html_response(content: str) -> str:
+        """Normalize LLM HTML output while preserving valid tags."""
+        import re
+
+        if not content:
+            return ""
+
+        text = content.strip()
+
+        # Remove fenced code markers like ```html ... ```
+        text = re.sub(r"^```[a-zA-Z0-9_-]*\s*", "", text)
+        text = re.sub(r"\s*```$", "", text)
+
+        # Remove accidental leading language marker lines ("html")
+        text = re.sub(r"^\s*html\s*\n", "", text, flags=re.IGNORECASE)
+
+        # Decode escaped entities so HTML renders properly in frontend
+        text = unescape(text)
+
+        # Remove wrapping <html>/<body> tags if the model returns full documents
+        text = re.sub(r"</?html[^>]*>", "", text, flags=re.IGNORECASE)
+        text = re.sub(r"</?body[^>]*>", "", text, flags=re.IGNORECASE)
+
+        return text.strip()
+
+    @staticmethod
+    def _clean_plain_text_response(content: str) -> str:
+        """Normalize LLM output to plain text for safe UI rendering."""
+        import re
+
+        if not content:
+            return ""
+
+        text = content.strip()
+
+        # Remove fenced code block markers (e.g., ```html ... ```)
+        text = re.sub(r"^```[a-zA-Z0-9_-]*\s*", "", text)
+        text = re.sub(r"\s*```$", "", text)
+
+        # Decode escaped entities and remove remaining HTML tags
+        text = unescape(text)
+        text = re.sub(r"<[^>]+>", "", text)
+
+        # Normalize spacing/newlines
+        text = re.sub(r"\n{3,}", "\n\n", text)
+        text = re.sub(r"[ \t]{2,}", " ", text)
+
+        return text.strip()
 
     @staticmethod
     def _ensure_client():
@@ -110,10 +161,12 @@ Responde en HTML simple (divs y párrafos). Máximo 300 tokens. Sé conciso, pr�
                 max_tokens=settings.OPENAI_MAX_TOKENS,
             )
 
+            clean_html = LLMService._clean_html_response(response.choices[0].message.content)
+
             return f"""
 <div style="margin: 20px 0; padding: 15px; border-radius: 8px;">
     
-    {response.choices[0].message.content}
+    {clean_html}
 </div>
 """
 
@@ -140,7 +193,7 @@ Responde en HTML simple (divs y párrafos). Máximo 300 tokens. Sé conciso, pr�
             user_skill_level: User's skill level (1-5)
             
         Returns:
-            HTML string with explanation
+            Plain text explanation
         """
         client_instance = LLMService._ensure_client()
         
@@ -185,10 +238,10 @@ Responde en TEXTO PLANO sin HTML. Máximo 300 tokens."""
                 max_tokens=settings.OPENAI_MAX_TOKENS,
             )
 
-            # Clean response from any HTML tags
-            import re
-            clean_text = re.sub(r'<[^>]+>', '', response.choices[0].message.content)
-            
+            clean_text = LLMService._clean_plain_text_response(
+                response.choices[0].message.content
+            )
+
             return clean_text
 
         except APIError as e:

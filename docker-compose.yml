@@ -14,7 +14,7 @@ services:
       - ./backend:/app
       - ./backend/logs:/app/logs
       - ./backend/uploads:/app/uploads
-      - ./models:/app/models
+      - ./backend/models:/app/models
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     networks:
       - trainecg-network

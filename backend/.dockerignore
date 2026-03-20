@@ -1,0 +1,16 @@
+# Exclude development artifacts and heavy local assets from Docker build context
+__pycache__/
+*.py[cod]
+*.sqlite3
+*.db
+.env
+.env.*
+logs/
+uploads/
+models/
+train/
+docs/
+tests/
+
+# Not needed to build/run backend service image
+scripts/

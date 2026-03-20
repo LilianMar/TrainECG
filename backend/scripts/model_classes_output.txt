@@ -1,0 +1,196 @@
+Found AttentionLayer at line 236
+Found SpatialAttentionLayer at line 256
+Found SimpleECGModel at line 288
+Found ImprovedCNNModel at line 304
+Found LSTMWithAttentionModel at line 344
+Found HybridCNNLSTMWithAttentionModel at line 358
+Found ResNet50WithSpatialAttention at line 379
+
+================================================================================
+EXTRACTING CLASSES:
+================================================================================
+
+# ============= AttentionLayer =============
+
+class AttentionLayer(layers.Layer):
+    def __init__(self, units=128, **kwargs):
+        super().__init__(**kwargs)
+        self.units = units
+    def build(self, input_shape):
+        self.W_q = self.add_weight(shape=(input_shape[-1], self.units), initializer='glorot_uniform')
+        self.W_k = self.add_weight(shape=(input_shape[-1], self.units), initializer='glorot_uniform')
+        self.W_v = self.add_weight(shape=(input_shape[-1], self.units), initializer='glorot_uniform')
+        self.dense = layers.Dense(input_shape[-1])
+        super().build(input_shape)
+    def call(self, inputs):
+        Q = tf.matmul(inputs, self.W_q)
+        K = tf.matmul(inputs, self.W_k)
+        V = tf.matmul(inputs, self.W_v)
+        attn = tf.matmul(Q, K, transpose_b=True)
+        attn = attn / tf.sqrt(tf.cast(self.units, tf.float32))
+        w = tf.nn.softmax(attn, axis=-1)
+        out = tf.matmul(w, V)
+        return self.dense(out) + inputs
+
+
+
+# ============= SpatialAttentionLayer =============
+
+class SpatialAttentionLayer(layers.Layer):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+    def build(self, input_shape):
+        self.conv1 = layers.Conv2D(64, (3,3), padding='same', activation='relu')
+        self.conv2 = layers.Conv2D(1, (1,1), padding='same', activation='sigmoid')
+        super().build(input_shape)
+    def call(self, x):
+        m = self.conv1(x)
+        m = self.conv2(m)
+        return x * m
+
+
+
+# ============= SimpleECGModel =============
+
+class SimpleECGModel:
+    """CONSERVADO DEL ORIGINAL - SIN CAMBIOS"""
+    def __init__(self, input_shape, num_classes): 
+        self.input_shape=input_shape; self.num_classes=num_classes
+    def build_model(self):
+        inp = layers.Input(shape=self.input_shape)
+        x = layers.Conv2D(16,3,padding='same',activation='relu')(inp)
+        x = layers.BatchNormalization()(x); x = layers.MaxPooling2D(2)(x)
+        x = layers.Conv2D(32,3,padding='same',activation='relu')(x)
+        x = layers.BatchNormalization()(x); x = layers.MaxPooling2D(2)(x)
+        x = layers.Conv2D(64,3,padding='same',activation='relu')(x)
+        x = layers.BatchNormalization()(x); x = layers.GlobalAveragePooling2D()(x)
+        x = layers.Dropout(0.3)(x); x = layers.Dense(128,activation='relu')(x); x = layers.Dropout(0.2)(x)
+        out = layers.Dense(self.num_classes, activation='softmax')(x)
+        return models.Model(inp,out)
+
+
+
+# ============= ImprovedCNNModel =============
+
+class ImprovedCNNModel:
+    """NUEVO: CNN según especificaciones del usuario (corregida para 128x128)"""
+    def __init__(self, input_shape, num_classes):
+        self.input_shape = input_shape
+        self.num_classes = num_classes
+
+    def build_model(self):
+        model = Sequential([
+            # Etapa 1
+            Conv2D(32, (3, 3), activation='relu', input_shape=self.input_shape),
+            MaxPooling2D((2, 2)),  # 128x128 -> 64x64
+            
+            # Etapa 2  
+            Conv2D(32, (3, 3), activation='relu'),
+            MaxPooling2D((2, 2)),  # 64x64 -> 32x32
+            
+            # Etapa 3
+            Conv2D(64, (3, 3), activation='relu'),
+            MaxPooling2D((2, 2)),  # 32x32 -> 16x16
+            
+            # Etapa 4
+            Conv2D(64, (3, 3), activation='relu'),
+            MaxPooling2D((2, 2)),  # 16x16 -> 8x8
+            
+            # Etapa 5 - CORREGIDA: Sin MaxPooling para evitar que se vuelva demasiado pequeña
+            Conv2D(128, (3, 3), activation='relu'),  # 8x8 -> 6x6
+            
+            # Etapa 6 - CORREGIDA: Sin MaxPooling para evitar dimensiones negativas
+            Conv2D(128, (3, 3), activation='relu'),  # 6x6 -> 4x4
+            
+            # Global Average Pooling en lugar del último MaxPooling + Flatten
+            layers.GlobalAveragePooling2D(),
+            
+            # Clasificador
+            Dense(256, activation='relu'),
+            Dropout(0.5),
+            Dense(self.num_classes, activation='softmax')
+        ])
+        return model
+
+
+
+# ============= LSTMWithAttentionModel =============
+
+class LSTMWithAttentionModel:
+    """MODIFICADO: Peso especial para clase N en loss"""
+    def __init__(self, input_shape, num_classes): 
+        self.input_shape=input_shape; self.num_classes=num_classes
+    def build_model(self):
+        inputs = layers.Input(shape=self.input_shape)
+        x = layers.Reshape((self.input_shape[0], self.input_shape[1]))(inputs)
+        x = layers.LSTM(128, return_sequences=True, dropout=0.25, recurrent_dropout=0.15)(x)
+        att = layers.Dense(1, activation='tanh')(x); att = layers.Flatten()(att); att = layers.Activation('softmax')(att)
+        att = layers.RepeatVector(128)(att); att = layers.Permute([2,1])(att); x = layers.multiply([x, att])
+        x = layers.LSTM(64, dropout=0.25, recurrent_dropout=0.15)(x); x = layers.Dense(128, activation='relu')(x)
+        x = layers.Dropout(0.3)(x); out = layers.Dense(self.num_classes, activation='softmax')(x)
+        return models.Model(inputs, out)
+
+
+
+# ============= HybridCNNLSTMWithAttentionModel =============
+
+class HybridCNNLSTMWithAttentionModel:
+    """MODIFICADO: Peso especial para clase N en loss"""
+    def __init__(self, input_shape, num_classes): 
+        self.input_shape=input_shape; self.num_classes=num_classes
+    def build_model(self):
+        inputs = layers.Input(shape=self.input_shape)
+        x = layers.Conv2D(32,3,padding='same', activation='relu')(inputs); x = layers.BatchNormalization()(x); x = layers.MaxPooling2D(2)(x)
+        x = SpatialAttentionLayer()(x); x = layers.Dropout(0.2)(x)
+        x = layers.Conv2D(64,3,padding='same', activation='relu')(x); x = layers.BatchNormalization()(x); x = layers.MaxPooling2D(2)(x)
+        x = SpatialAttentionLayer()(x); x = layers.Dropout(0.25)(x)
+        x = layers.Conv2D(128,3,padding='same', activation='relu')(x); x = layers.BatchNormalization()(x); x = layers.MaxPooling2D(2)(x)
+        x = layers.Dropout(0.2)(x)
+        s = x.shape; x = layers.Reshape((s[1], s[2]*s[3]))(x)
+        x = layers.Bidirectional(layers.LSTM(96, return_sequences=True, dropout=0.2, recurrent_dropout=0.15))(x)
+        attended = AttentionLayer(units=192)(x); x = layers.GlobalAveragePooling1D()(attended)
+        x = layers.Dense(256, activation='relu')(x); x = layers.Dropout(0.3)(x)
+        x = layers.Dense(128, activation='relu')(x); x = layers.Dropout(0.25)(x)
+        x = layers.Dense(64, activation='relu')(x); x = layers.Dropout(0.2)(x)
+        out = layers.Dense(self.num_classes, activation='softmax')(x)
+        return models.Model(inputs,out)
+
+
+
+# ============= ResNet50WithSpatialAttention =============
+
+class ResNet50WithSpatialAttention:
+    """CORREGIDO: Manejo de canal único para ResNet50"""
+    def __init__(self, input_shape, num_classes, trainable_from=None):
+        self.input_shape = input_shape
+        self.num_classes = num_classes
+        self.trainable_from = trainable_from
+    def build_model(self):
+        inputs = layers.Input(shape=self.input_shape)
+        
+        # Convertir de 1 canal a 3 canales para ResNet50
+        x = layers.Conv2D(3, (1,1), padding='same')(inputs)
+        
+        base = tf.keras.applications.ResNet50(include_top=False, weights='imagenet', 
+                                            input_shape=(self.input_shape[0], self.input_shape[1], 3))
+        if self.trainable_from is None:
+            for layer in base.layers:
+                layer.trainable = False
+        else:
+            for i, layer in enumerate(base.layers):
+                layer.trainable = True if i >= self.trainable_from else False
+
+        x = base(x, training=False)
+        x = SpatialAttentionLayer()(x)
+        x = layers.GlobalAveragePooling2D()(x)
+        x = layers.Dense(256, activation='relu')(x); x = layers.Dropout(0.4)(x)
+        x = layers.Dense(128, activation='relu')(x); x = layers.Dropout(0.3)(x)
+        outputs = layers.Dense(self.num_classes, activation='softmax')(x)
+        return models.Model(inputs, outputs)
+
+# ===========================
+# Visualización (MEJORADA: Gráficos horizontales)
+# ===========================
+
+
+

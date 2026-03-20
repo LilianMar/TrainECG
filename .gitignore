@@ -58,8 +58,13 @@ logs/
 # Backend specific
 backend/uploads/
 backend/logs/
+backend/docs
 
 # OS
 *.orig
 .directory
 
+# LaTeX USB Template
+USB_template/
+Backend/scripts/2D ECG grayscale images/
+Backend/scripts/IA-env
