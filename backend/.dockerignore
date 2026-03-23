@@ -7,10 +7,17 @@ __pycache__/
 .env.*
 logs/
 uploads/
-models/
 train/
 docs/
 tests/
 
 # Not needed to build/run backend service image
 scripts/
+
+# Keep only inference model artifacts required at runtime.
+# Do not ignore the entire models/ directory because standalone docker run
+# expects MODEL_PATH to be available inside the image.
+models/*
+!models/best_model_Hybrid_CNN_LSTM_Attention.h5
+!models/best_model_Hybrid_CNN_LSTM_Attention_balanced.h5
+!models/best_model_CNN_Mejorada_Usuario.h5

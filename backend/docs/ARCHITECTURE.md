@@ -76,7 +76,8 @@ ecg-backend/
 ├── 📁 uploads/                      # Imágenes subidas por usuarios
 │
 ├── 📁 models/                       # Modelos ML pre-entrenados
-│   ├── 📄 best_model_CNN_LSTM_Attention.h5
+│   ├── 📄 best_model_Hybrid_CNN_LSTM_Attention.h5
+│   ├── 📄 best_model_Hybrid_CNN_LSTM_Attention_balanced.h5
 │   └── 📄 best_model_CNN_Mejorada_Usuario.h5
 │
 ├── 📄 .env.example                 # Variables de entorno (plantilla)

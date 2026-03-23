@@ -390,9 +390,13 @@ Responde en HTML simple (divs y parrafos). Maximo 300 tokens. Sin emojis."""
                 max_tokens=300,
             )
 
+            clean_html = LLMService._clean_html_response(
+                response.choices[0].message.content
+            )
+
             return {
                 "success": True,
-                "recommendations": response.choices[0].message.content,
+                "recommendations": clean_html,
                 "arrhythmias_to_review": arrhythmias_to_review,
             }
         except APIError as exc:

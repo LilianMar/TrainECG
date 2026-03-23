@@ -60,6 +60,15 @@ backend/uploads/
 backend/logs/
 backend/docs
 
+# Development notebooks/scripts (keep only the essential ones)
+backend/scripts/*.ipynb
+backend/scripts/crisp_ML/
+
+# Test artifacts (reports can be ignored but test code should be kept)
+test/reports/
+test/data/predictions*.csv
+test/data/dataset_from_questions/
+
 # OS
 *.orig
 .directory

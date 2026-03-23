@@ -67,16 +67,24 @@ ecg-backend/
 │       ├── __init__.py
 │       ├── file_handler.py     # Manejo de archivos
 │       └── logger.py           # Configuración de logging
-├── tests/                       # Tests unitarios e integración
-│   └── __init__.py
-├── logs/                        # Archivos de logging
-├── uploads/                     # Imágenes subidas
-├── .env.example               # Variables de entorno (ejemplo)
+├── logs/                        # Archivos de logging (ignorado en Git)
+├── models/                      # Modelos ML pre-entrenados
+│   ├── best_model_Hybrid_CNN_LSTM_Attention.h5
+│   ├── best_model_Hybrid_CNN_LSTM_Attention_balanced.h5
+│   └── best_model_CNN_Mejorada_Usuario.h5
+├── uploads/                     # Imágenes subidas por usuarios (ignorado en Git)
+├── scripts/                     # Scripts de utilidad (setup, database, etc.)
+│   ├── populate_db.sh
+│   ├── reset_database.sh
+│   ├── insert_questions.py
+│   └── ... (ver backend/scripts/README.md)
+├── .env.example               # Variables de entorno (plantilla)
 ├── .gitignore                 # Archivos ignorados por Git
+├── .dockerignore              # Archivos ignorados para Docker
 ├── requirements.txt           # Dependencias de Python
 ├── run.py                     # Script de entrada
-├── docker-compose.yml         # Orquestación con Docker (TODO)
-├── Dockerfile                 # Containerización (TODO)
+├── Dockerfile                 # Containerización de backend
+├── docker-compose.yml         # Orquestación con Docker Compose
 └── README.md                  # Este archivo
 ```
 
@@ -293,7 +301,7 @@ ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 
 # Modelo ML
-MODEL_PATH=./models/best_model_CNN_LSTM_Attention.h5
+MODEL_PATH=./models/best_model_Hybrid_CNN_LSTM_Attention.h5
 IMAGE_SIZE=128
 WINDOW_SIZE=128
 WINDOW_OVERLAP=0.5
@@ -307,9 +315,11 @@ BACKEND_CORS_ORIGINS=["http://localhost:3000","http://localhost:8080"]
 ```
 
 ## 🐳 Docker
+ (desde raíz de TrainECG_app)
+docker-compose up -d
+```
 
-```bash
-# Construir imagen
+Backend estará disponible en `http://localhost:8000Construir imagen
 docker build -t ecg-backend:latest .
 
 # Ejecutar contenedor

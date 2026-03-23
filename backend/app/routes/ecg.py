@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.database import get_db
-from app.ml_pipeline import get_gradcam, get_model_manager, get_preprocessor, get_image_annotator
+from app.ml_pipeline import get_model_manager, get_preprocessor, get_image_annotator
 from app.models.user import User
 from app.routes.users import get_current_user
 from app.schemas.ecg import ECGClassificationResponse, WindowCoordinate
@@ -108,9 +108,6 @@ async def classify_ecg(
             classes = [p[0] for p in predictions]
             main_class = Counter(classes).most_common(1)[0][0]
             main_confidence = max(p[1] for p in predictions if p[0] == main_class)
-
-        model = model_manager.get_model()
-        grad_cam = get_gradcam(model)
 
         gradcam_windows: list[WindowCoordinate] = []
         affected_windows_data: list[tuple[int, int, int, int, float]] = []  # For annotation

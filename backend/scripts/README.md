@@ -1,5 +1,7 @@
 # Backend Utility Scripts
 
+Conjunto de scripts para gestionar la base de datos, preguntas y logros del sistema.
+
 ## Database Setup & Management
 
 - **`populate_db.sh`** - Populates database with initial data
@@ -21,6 +23,10 @@
 - **`check_badges.py`** - Checks badge status for users
 - **`display_badges.py`** - Displays badge information
 - **`display_icons.py`** - Displays icon information for badges
+
+## Archive Note
+
+Development notebooks and analysis scripts (EDA, Voting, Grad-CAM analysis) have been archived in a separate development environment to keep this repository clean. If you need to reproduce the analysis pipeline, refer to the original training repository or contact the team.
 
 ## Usage
 

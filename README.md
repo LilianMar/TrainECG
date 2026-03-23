@@ -1,12 +1,13 @@
 # TrainECG App (Monorepo)
 
-Monorepo with a FastAPI backend and a React (Vite) frontend.
+Monorepo with a FastAPI backend and a React (Vite) frontend for ECG training and classification with AI support.
 
 ## Structure
 
-- backend/
-- frontend/
-- models/ (tracked with Git LFS)
+- `backend/` - FastAPI backend with ML pipeline
+- `frontend/` - React + Vite frontend
+- `test/` - Automated testing suite (unit, functional, performance, usability)
+- `models/` - ML artifacts (not tracked; runtime only)
 
 ## Quick Start (Docker)
 
@@ -50,4 +51,5 @@ npm run dev
 ## Notes
 
 - Frontend uses `VITE_API_URL` from frontend/.env to reach the backend.
-- Models are tracked with Git LFS (see .gitattributes).
+- ML models in `backend/models/` are pre-trained artifacts (best_model_Hybrid_CNN_LSTM_Attention.h5, etc.).
+- Test suite in `test/` implements plan_pruebas.tex specifications (data quality, model metrics, functional, performance, usability).
