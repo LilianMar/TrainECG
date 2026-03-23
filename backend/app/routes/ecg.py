@@ -71,8 +71,12 @@ async def classify_ecg(
                 detail=f"File too large. Max: {settings.MAX_UPLOAD_SIZE_MB}MB",
             )
 
+        # 1. PREPROCESAMIENTO (Otsu + ventanas)
+        preprocess_start = time.perf_counter()
         preprocessor = get_preprocessor()
         windows, coordinates, original_image = preprocessor.preprocess_pipeline(str(upload_path))
+        preprocess_time_ms = int((time.perf_counter() - preprocess_start) * 1000)
+        
         if not windows:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -85,6 +89,8 @@ async def classify_ecg(
         # Window width is calculated inside preprocessor
         window_width = min(150, img_width // 4)
 
+        # 2. INFERENCIA DEL MODELO
+        inference_start = time.perf_counter()
         model_manager = get_model_manager()
         predictions: list[tuple[str, float, int]] = []
         affected_windows: list[tuple[int, float]] = []
@@ -94,6 +100,7 @@ async def classify_ecg(
             predictions.append((predicted_class, confidence, i))
             if confidence > 0.9:
                 affected_windows.append((i, confidence))
+        inference_time_ms = int((time.perf_counter() - inference_start) * 1000)
 
         # Get most common class from HIGH-CONFIDENCE predictions only
         if affected_windows:
@@ -109,6 +116,8 @@ async def classify_ecg(
             main_class = Counter(classes).most_common(1)[0][0]
             main_confidence = max(p[1] for p in predictions if p[0] == main_class)
 
+        # 3. GENERACIÓN GRAD-CAM y coordinadas de ventanas
+        gradcam_start = time.perf_counter()
         gradcam_windows: list[WindowCoordinate] = []
         affected_windows_data: list[tuple[int, int, int, int, float]] = []  # For annotation
         
@@ -132,8 +141,10 @@ async def classify_ecg(
             )
             # Add to annotation data (x, y, width, height, confidence)
             affected_windows_data.append((x, y_start, window_width, rect_height, conf))
+        gradcam_time_ms = int((time.perf_counter() - gradcam_start) * 1000)
 
-        # Create annotated image with bounding boxes on the ORIGINAL image
+        # 4. ANOTACIÓN DE IMAGEN
+        annotate_start = time.perf_counter()
         annotated_image_base64 = None
         if affected_windows_data:
             try:
@@ -144,15 +155,26 @@ async def classify_ecg(
             except Exception as e:
                 logger.warning(f"Failed to create annotated image: {str(e)}")
                 # Continue without annotated image
+        annotate_time_ms = int((time.perf_counter() - annotate_start) * 1000)
 
-        # Generate LLM explanation for the classification
+        # 5. GENERACIÓN LLM (OpenAI)
+        llm_start = time.perf_counter()
         llm_explanation = LLMService.generate_ecg_explanation(
             predicted_class=main_class,
             confidence=float(main_confidence),
             affected_windows=len(affected_windows),
             user_skill_level=current_user.skill_level or 2,
         )
+        llm_time_ms = int((time.perf_counter() - llm_start) * 1000)
+        
+        # Tiempo total
         processing_time_ms = int((time.perf_counter() - start_time) * 1000)
+        
+        # Log tiempos por componente
+        logger.info(
+            "Pipeline timing: preprocess=%dms, inference=%dms, gradcam=%dms, annotate=%dms, llm=%dms, total=%dms",
+            preprocess_time_ms, inference_time_ms, gradcam_time_ms, annotate_time_ms, llm_time_ms, processing_time_ms
+        )
 
         classification = ECGService.create_classification(
             db=db,
