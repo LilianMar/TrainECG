@@ -71,50 +71,34 @@ async def classify_ecg(
                 detail=f"File too large. Max: {settings.MAX_UPLOAD_SIZE_MB}MB",
             )
 
-        # 1. PREPROCESAMIENTO (Otsu + ventanas)
         preprocess_start = time.perf_counter()
         preprocessor = get_preprocessor()
-        windows, coordinates, original_image = preprocessor.preprocess_pipeline(str(upload_path))
-        preprocess_time_ms = int((time.perf_counter() - preprocess_start) * 1000)
-        
-        if not windows:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="No valid windows extracted from image",
-            )
-        
-        # Get image dimensions
-        img_height, img_width = original_image.shape[:2]
-        
-        # Window width is calculated inside preprocessor
-        window_width = min(150, img_width // 4)
 
-        # 2. INFERENCIA DEL MODELO
+        # 1. CLASIFICACIÓN — imagen completa preprocesada (Blur+Normalize+Otsu, 128×128)
+        # Diagnóstico confirma: imagen completa → confianza 1.0 correcta.
+        # Ventanas parciales → Otsu colapsa contenido a binario plano → votación incorrecta.
+        full_arr, original_image = preprocessor.preprocess_for_classification(str(upload_path))
+        img_height, img_width = original_image.shape[:2]
+
+        # Ventanas solo para anotación visual (sin clasificar individualmente)
+        windows, coordinates, _ = preprocessor.preprocess_pipeline(str(upload_path))
+        preprocess_time_ms = int((time.perf_counter() - preprocess_start) * 1000)
+
+        window_width = max(min(img_height, img_width), 64)
+
+        # 2. INFERENCIA sobre imagen completa
         inference_start = time.perf_counter()
         model_manager = get_model_manager()
-        predictions: list[tuple[str, float, int]] = []
-        affected_windows: list[tuple[int, float]] = []
-
-        for i, window in enumerate(windows):
-            predicted_class, confidence = model_manager.predict(window)
-            predictions.append((predicted_class, confidence, i))
-            if confidence > 0.9:
-                affected_windows.append((i, confidence))
+        main_class, main_confidence = model_manager.predict(full_arr)
         inference_time_ms = int((time.perf_counter() - inference_start) * 1000)
 
-        # Get most common class from HIGH-CONFIDENCE predictions only
-        if affected_windows:
-            high_conf_predictions = [predictions[i] for i, _ in affected_windows]
-            classes = [p[0] for p in high_conf_predictions]
-            main_class = Counter(classes).most_common(1)[0][0]
-            main_confidence = (
-                sum(p[1] for p in high_conf_predictions if p[0] == main_class) / len(high_conf_predictions)
-            )
-        else:
-            # Fallback: no high-confidence predictions found
-            classes = [p[0] for p in predictions]
-            main_class = Counter(classes).most_common(1)[0][0]
-            main_confidence = max(p[1] for p in predictions if p[0] == main_class)
+        # Ventanas afectadas para anotación: marcar todas si confianza > 0.7
+        predictions: list[tuple[str, float, int]] = [(main_class, main_confidence, 0)]
+        affected_windows: list[tuple[int, float]] = [
+            (i, main_confidence)
+            for i in range(len(windows))
+            if main_confidence > 0.7
+        ]
 
         # 3. GENERACIÓN GRAD-CAM y coordinadas de ventanas
         gradcam_start = time.perf_counter()

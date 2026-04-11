@@ -63,6 +63,10 @@ backend/docs
 # Development notebooks/scripts (keep only the essential ones)
 backend/scripts/*.ipynb
 backend/scripts/crisp_ML/
+backend/scripts/_archive/
+
+# Archivos en revisión (no van a git)
+_cleanup/
 
 # Test artifacts (reports can be ignored but test code should be kept)
 test/reports/

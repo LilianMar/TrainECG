@@ -26,6 +26,7 @@ venv.bak/
 *.db
 *.sqlite
 *.sqlite3
+db/*.db
 
 # Logs
 logs/
@@ -34,8 +35,8 @@ logs/
 # Uploads
 uploads/
 
-# ML Models
-models/*.h5
+# ML Models — tracked via Git LFS (.gitattributes: *.h5 filter=lfs)
+# models/*.h5 — NO ignorar: se versiona con LFS
 models/*.pkl
 models/*.pt
 

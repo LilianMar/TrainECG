@@ -282,14 +282,14 @@ class ModelManager:
             confidence = float(prediction[0][class_idx])
 
             # Map index to class name (MIT-BIH beat types)
-            # Model has 6 outputs, though typically uses 5 main classes
+            # LabelEncoder sorts classes alphabetically: F, M, N, Q, S, V
             class_names = [
-                "normal",                      # 0: Normal beat
-                "supraventricular_ectopic",   # 1: Supraventricular ectopic beat
-                "ventricular_ectopic",        # 2: Ventricular ectopic beat
-                "fusion",                      # 3: Fusion beat
-                "unknown",                     # 4: Unknown beat
-                "paced",                       # 5: Paced beat (additional class)
+                "fusion",                      # 0: F - Fusion of ventricular and normal beat
+                "paced",                       # 1: M - Paced / other beat
+                "normal",                      # 2: N - Normal beat
+                "unknown",                     # 3: Q - Unclassifiable / unknown beat
+                "supraventricular_ectopic",   # 4: S - Supraventricular ectopic beat
+                "ventricular_ectopic",        # 5: V - Ventricular ectopic beat
             ]
             
             # Safety check for index

@@ -3,6 +3,10 @@ FROM oven/bun:1 AS build
 
 WORKDIR /app
 
+# Aceptar VITE_API_URL como argumento de build (sobreescribe .env)
+ARG VITE_API_URL=http://localhost:8000
+ENV VITE_API_URL=$VITE_API_URL
+
 # Copiar archivos de dependencias primero (cache de capas)
 COPY package.json bun.lockb* ./
 

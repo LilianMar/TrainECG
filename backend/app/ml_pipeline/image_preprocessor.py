@@ -111,7 +111,7 @@ class ImagePreprocessor:
             size = self.image_size
 
         try:
-            resized = cv2.resize(image, (size, size), interpolation=cv2.INTER_CUBIC)
+            resized = cv2.resize(image, (size, size), interpolation=cv2.INTER_AREA)
             return resized
         except Exception as e:
             logger.error(f"Error resizing image: {str(e)}")
@@ -165,80 +165,85 @@ class ImagePreprocessor:
         coordinates = []
 
         height, width = image.shape[:2]
-        
+
         # Extract the ECG region (full height of signal area)
         ecg_region = image[y_start:y_end, :]
         region_height = y_end - y_start
-        
-        # Use fixed window width similar to original pipeline (150px or adaptive)
-        window_width = min(150, width // 4)  # Horizontal window width
-        step_size = max(30, window_width // 3)  # Horizontal step (creates overlap)
-        
+
+        # Ventana cuadrada: ancho = alto de la región ECG.
+        # Esto evita distorsión al hacer resize a 128×128 (aspect ratio 1:1).
+        # Mínimo 64px para no hacer upscaling excesivo; máximo = ancho de imagen.
+        window_width = max(min(region_height, width), 64)
+        step_size = max(window_width // 2, 30)  # 50% overlap, mínimo 30px
+
         logger.info(f"Window settings: width={window_width}, step={step_size}, region_height={region_height}")
 
         # Slide horizontally across the image
         x = 0
         while x + window_width <= width:
-            # Extract window from ECG region (vertical = full ECG height, horizontal = sliding window)
             window = ecg_region[:, x:x + window_width]
-            
+
             # Only keep windows with enough signal variation
             if window.std() > 10:
-                # Resize window to model input size (128x128)
+                # Resize cuadrado → cuadrado: sin distorsión de aspecto
                 window_resized = cv2.resize(
                     window,
                     (self.window_size, self.window_size),
                     interpolation=cv2.INTER_AREA
                 )
-                
                 windows.append(window_resized)
-                # Store coordinates in original image space
-                # x is horizontal position, y is the center of the ECG region
                 y_center = y_start + region_height // 2
                 coordinates.append((x, y_center, region_height))
-            
+
             x += step_size
 
         return windows, coordinates
+
+    def preprocess_for_classification(self, image_path: str) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Preprocess a full ECG beat image for classification.
+
+        The model was trained on full 128x128 beat images (not sliding windows),
+        so classification must use the complete image resized to model input size.
+
+        Steps:
+            1. Load as grayscale
+            2. Resize to 128x128 (INTER_AREA, matching training)
+            3. GaussianBlur → normalize(0-255) → Otsu → scale to [0,1]
+
+        Returns:
+            Tuple of (preprocessed array shape (128,128), original image)
+        """
+        try:
+            image = self.load_image(image_path)
+            original_image = image.copy()
+            resized = self.resize_image(image, self.image_size)
+            normalized = self.normalize_image(resized)
+            return normalized, original_image
+        except Exception as e:
+            logger.error(f"Error in preprocess_for_classification: {str(e)}")
+            raise
 
     def preprocess_pipeline(
         self, image_path: str
     ) -> Tuple[List[np.ndarray], List[Tuple[int, int, int]], np.ndarray]:
         """
-        Complete preprocessing pipeline.
-        
-        Steps:
-        1. Load original image (no resizing)
-        2. Detect ECG signal region (vertical bounds)
-        3. Create sliding windows horizontally in that region
-        4. Normalize each window
-        
-        Coordinates returned are in original image space:
-        (x_start, y_center, height) where height is the ECG region height
+        Sliding-window pipeline used for annotation / Grad-CAM highlighting.
 
-        Args:
-            image_path: Path to ECG image
+        NOTE: Do NOT use this for the primary classification prediction.
+        Use preprocess_for_classification() instead.
 
         Returns:
             Tuple of (preprocessed windows, coordinates in original space, original image)
         """
         try:
-            # Load image
             image = self.load_image(image_path)
             original_image = image.copy()
 
-            # Detect ECG signal region (vertical bounds)
             y_start, y_end = self.detect_ecg_region(image)
-
-            # Create sliding windows on original size image
-            # Windows are created horizontally in the ECG region
             windows_raw, coordinates = self.create_sliding_windows(image, y_start, y_end)
 
-            # Normalize each window
-            windows_normalized = []
-            for window in windows_raw:
-                normalized = self.normalize_image(window)
-                windows_normalized.append(normalized)
+            windows_normalized = [self.normalize_image(w) for w in windows_raw]
 
             return windows_normalized, coordinates, original_image
         except Exception as e:

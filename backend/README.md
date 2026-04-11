@@ -1,386 +1,237 @@
-# ECG Insight Mentor Backend
+# ECG Insight Mentor — Backend
 
-Backend API para la plataforma de entrenamiento en lectura de electrocardiogramas (ECG) con apoyo de inteligencia artificial.
+API RESTful para la plataforma de entrenamiento en lectura de electrocardiogramas con apoyo de inteligencia artificial.
 
-## 📋 Descripción General
+## Descripción General
 
-API RESTful construida con **FastAPI** y **SQLite** que proporciona:
+Construida con **FastAPI** y **SQLite** (SQLAlchemy), proporciona:
 
-- ✅ Autenticación y gestión de usuarios
-- ✅ Clasificación de ECG con modelo CNN+LSTM+Attention
-- ✅ Interpretabilidad con Grad-CAM
-- ✅ Módulo de práctica con retroalimentación
-- ✅ Seguimiento de progreso y análisis
-- ✅ Integración con LLM para explicaciones
-- ✅ Seguridad con JWT y encriptación
-- ✅ Logging y monitoreo
+- Autenticación y gestión de usuarios (JWT + bcrypt)
+- Clasificación de ECG con modelo Hybrid CNN+LSTM+Attention
+- Anotación visual de regiones relevantes por ventana deslizante
+- Módulo de práctica con preguntas clínicas y retroalimentación
+- Test posterior a la práctica con ajuste de nivel de habilidad
+- Seguimiento de progreso y logros (badges)
+- Integración con OpenAI para explicaciones clínicas adaptadas al nivel del usuario
+- Pipeline de preprocesamiento que replica exactamente el proceso de entrenamiento
 
-## 🏗️ Estructura del Proyecto
+## Estructura del Proyecto
 
 ```
-ecg-backend/
+backend/
 ├── app/
-│   ├── __init__.py
-│   ├── main.py                 # Punto de entrada de la aplicación
+│   ├── main.py                      # Punto de entrada FastAPI
 │   ├── core/
-│   │   ├── __init__.py
-│   │   └── config.py           # Configuración y variables de entorno
+│   │   └── config.py                # Configuración y variables de entorno
 │   ├── database/
-│   │   ├── __init__.py
-│   │   ├── base.py             # Base de modelos SQLAlchemy
-│   │   └── session.py          # Gestión de sesiones
+│   │   ├── base.py                  # Base declarativa SQLAlchemy
+│   │   └── session.py               # Gestión de sesiones
 │   ├── models/
-│   │   ├── __init__.py
-│   │   ├── user.py             # Modelo de usuario
-│   │   ├── ecg.py              # Modelos de ECG y práctica
-│   │   └── progress.py         # Modelo de progreso
+│   │   ├── user.py                  # Modelo de usuario
+│   │   ├── ecg.py                   # ECG, preguntas de práctica, intentos
+│   │   └── progress.py              # Progreso y logros
 │   ├── schemas/
-│   │   ├── __init__.py
-│   │   ├── user.py             # Schemas de usuario (Pydantic)
-│   │   ├── ecg.py              # Schemas de ECG
-│   │   └── progress.py         # Schemas de progreso
+│   │   ├── user.py                  # Schemas Pydantic — usuario
+│   │   ├── ecg.py                   # Schemas Pydantic — ECG y práctica
+│   │   └── progress.py              # Schemas Pydantic — progreso
 │   ├── routes/
-│   │   ├── __init__.py
-│   │   ├── auth.py             # Rutas de autenticación
-│   │   ├── users.py            # Rutas de perfil
-│   │   ├── health.py           # Rutas de salud
-│   │   ├── ecg.py              # Rutas de clasificación (TODO)
-│   │   ├── practice.py         # Rutas de práctica (TODO)
-│   │   └── progress.py         # Rutas de progreso (TODO)
+│   │   ├── auth.py                  # POST /auth/register, /auth/login
+│   │   ├── users.py                 # GET/PUT /users/me
+│   │   ├── ecg.py                   # POST /ecg/classify, GET /ecg/history
+│   │   ├── practice.py              # GET /practice/questions, POST /practice/answer
+│   │   ├── progress.py              # GET /progress
+│   │   ├── achievements.py          # GET /achievements
+│   │   └── health.py                # GET /health
 │   ├── services/
-│   │   ├── __init__.py
-│   │   ├── user_service.py     # Lógica de usuarios
-│   │   ├── ecg_service.py      # Lógica de ECG
-│   │   └── progress_service.py # Lógica de progreso
-│   ├── security/
-│   │   ├── __init__.py
-│   │   └── auth.py             # JWT y contraseñas
-│   ├── middleware/
-│   │   ├── cors.py             # CORS middleware
-│   │   └── logging.py          # Logging middleware
+│   │   ├── user_service.py
+│   │   ├── ecg_service.py
+│   │   ├── progress_service.py
+│   │   ├── achievement_service.py
+│   │   └── llm_service.py           # Explicaciones vía OpenAI
 │   ├── ml_pipeline/
-│   │   ├── __init__.py
-│   │   ├── model_manager.py    # Carga y predicción del modelo
-│   │   ├── image_preprocessor.py # Preprocesamiento de imágenes
-│   │   └── grad_cam.py         # Interpretabilidad con Grad-CAM
+│   │   ├── model_manager.py         # Carga del modelo H5 y predicción
+│   │   ├── image_preprocessor.py    # Preprocesamiento (Blur+Normalize+Otsu)
+│   │   ├── image_annotator.py       # Anotación de imagen con ventanas
+│   │   └── grad_cam.py              # Interpretabilidad (no activo en clasificación)
+│   ├── middleware/
+│   │   ├── cors.py
+│   │   └── logging.py
+│   ├── security/
+│   │   └── auth.py                  # JWT y hashing de contraseñas
 │   └── utils/
-│       ├── __init__.py
-│       ├── file_handler.py     # Manejo de archivos
-│       └── logger.py           # Configuración de logging
-├── logs/                        # Archivos de logging (ignorado en Git)
-├── models/                      # Modelos ML pre-entrenados
-│   ├── best_model_Hybrid_CNN_LSTM_Attention.h5
-│   ├── best_model_Hybrid_CNN_LSTM_Attention_balanced.h5
-│   └── best_model_CNN_Mejorada_Usuario.h5
-├── uploads/                     # Imágenes subidas por usuarios (ignorado en Git)
-├── scripts/                     # Scripts de utilidad (setup, database, etc.)
-│   ├── populate_db.sh
-│   ├── reset_database.sh
-│   ├── insert_questions.py
-│   └── ... (ver backend/scripts/README.md)
-├── .env.example               # Variables de entorno (plantilla)
-├── .gitignore                 # Archivos ignorados por Git
-├── .dockerignore              # Archivos ignorados para Docker
-├── requirements.txt           # Dependencias de Python
-├── run.py                     # Script de entrada
-├── Dockerfile                 # Containerización de backend
-├── docker-compose.yml         # Orquestación con Docker Compose
-└── README.md                  # Este archivo
+│       ├── file_handler.py
+│       └── logger.py
+│
+├── models/                          # Modelos ML — versionados con Git LFS
+│   └── best_model_Hybrid_CNN_LSTM_Attention.h5
+│
+├── db/                              # Base de datos SQLite (montada como volumen)
+│   └── ecg_app.db                   # Generada en runtime (ignorada en git)
+│
+├── uploads/                         # Imágenes subidas por usuarios (ignorado en git)
+│   └── practice_ecgs/               # ECGs para las preguntas de práctica
+│
+├── scripts/                         # Scripts de utilidad y carga de datos
+│   ├── retrain_ecg.ipynb            # Notebook de reentrenamiento del modelo
+│   ├── corpus.json                  # Corpus de preguntas clínicas
+│   ├── model_classes_output.txt     # Referencia de clases del modelo
+│   └── _archive/                    # Notebooks experimentales (no producción)
+│
+├── tests/                           # Suite de tests
+├── seed.js                          # Seed inicial de base de datos (Bun)
+├── requirements.txt
+├── Dockerfile
+└── run.py
 ```
 
-## 🚀 Instalación
+## Despliegue con Docker (recomendado)
 
-### Requisitos Previos
+El despliegue completo se gestiona desde la **raíz del repositorio** con `docker-compose.yml`.
 
-- Python 3.10+
-- pip o conda
-- Git
-
-### Pasos
-
-1. **Clonar repositorio** (si aplica)
 ```bash
-git clone <repo-url>
-cd ecg-backend
+# Desde la raíz de TrainECG_app/
+docker compose up --build
 ```
 
-2. **Crear entorno virtual**
+Esto ejecuta en orden:
+1. **backend** — construye la imagen Python, inicia uvicorn, crea tablas SQLAlchemy
+2. **frontend** — construye Vite + nginx, sirve en puerto 9000
+3. **seed** — espera a que el backend esté healthy, luego inyecta las 20 preguntas de práctica y el usuario demo
+
+La base de datos se persiste en `./backend/db/ecg_app.db` (bind mount).
+
+### Variables de entorno
+
+Crear un archivo `.env` en la raíz del proyecto:
+
+```env
+SECRET_KEY=una-clave-larga-y-secreta
+OPENAI_API_KEY=sk-...
+VITE_API_URL=http://localhost:8000   # Para servidor remoto: http://IP:8000
+```
+
+## Instalación local (desarrollo sin Docker)
+
 ```bash
+# Crear entorno virtual
 python -m venv venv
-source venv/bin/activate  # En Windows: venv\Scripts\activate
-```
+source venv/bin/activate  # Windows: venv\Scripts\activate
 
-3. **Instalar dependencias**
-```bash
+# Instalar dependencias
 pip install -r requirements.txt
-```
 
-4. **Configurar variables de entorno**
-```bash
-cp .env.example .env
-# Editar .env con tus valores
-```
+# Variables de entorno
+cp .env.example .env  # Editar con tus valores
 
-5. **Ejecutar aplicación**
-```bash
+# Ejecutar
 python run.py
 ```
 
-La API estará disponible en `http://localhost:8000`
+API disponible en `http://localhost:8000`
 
-## 📚 Documentación de la API
+## Documentación de la API
 
-Una vez que la aplicación esté corriendo:
+Con la aplicación corriendo:
 
 - **Swagger UI**: http://localhost:8000/docs
 - **ReDoc**: http://localhost:8000/redoc
-- **OpenAPI JSON**: http://localhost:8000/openapi.json
 
-## 🔐 Autenticación
-
-### Endpoints de Autenticación
-
-#### Registro
-```http
-POST /auth/register
-Content-Type: application/json
-
-{
-  "name": "Dr. Juan Pérez",
-  "email": "juan@ejemplo.com",
-  "password": "securepass123",
-  "user_type": "doctor",
-  "institution": "Hospital ABC"
-}
-
-Response: 201 Created
-{
-  "access_token": "eyJhbGc...",
-  "token_type": "bearer",
-  "expires_in": 1800
-}
-```
-
-#### Login
-```http
-POST /auth/login
-Content-Type: application/json
-
-{
-  "email": "juan@ejemplo.com",
-  "password": "securepass123"
-}
-
-Response: 200 OK
-{
-  "access_token": "eyJhbGc...",
-  "token_type": "bearer",
-  "expires_in": 1800
-}
-```
-
-### Usar Token
-
-```http
-GET /users/me
-Authorization: Bearer eyJhbGc...
-```
-
-## 🏥 Endpoints Principales (Implementados)
-
-### Health Check
-- `GET /health` - Estado de la aplicación
+## Endpoints
 
 ### Autenticación
-- `POST /auth/register` - Registrar nuevo usuario
-- `POST /auth/login` - Iniciar sesión
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| POST | `/auth/register` | Registrar usuario |
+| POST | `/auth/login` | Iniciar sesión |
 
 ### Usuarios
-- `GET /users/me` - Obtener perfil actual
-- `PUT /users/me` - Actualizar perfil
-- `GET /users/profile/{user_id}` - Ver perfil público
-
-## 🔄 Endpoints por Implementar
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/users/me` | Perfil del usuario actual |
+| PUT | `/users/me` | Actualizar perfil |
 
 ### Clasificación de ECG
-- `POST /ecg/classify` - Clasificar imagen de ECG
-- `GET /ecg/history` - Historial de clasificaciones
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| POST | `/ecg/classify` | Clasificar imagen ECG |
+| GET | `/ecg/history` | Historial de clasificaciones |
 
 ### Práctica
-- `GET /practice/questions` - Obtener preguntas
-- `GET /practice/questions/{id}` - Obtener pregunta específica
-- `POST /practice/answer` - Enviar respuesta
-- `GET /practice/stats` - Estadísticas de práctica
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/practice/questions` | Listar preguntas |
+| POST | `/practice/answer` | Enviar respuesta |
+| GET | `/practice/stats` | Estadísticas de práctica |
+| POST | `/practice/post-test` | Test posterior a práctica |
 
-### Progreso
-- `GET /progress` - Obtener progreso del usuario
-- `GET /progress/recommendations` - Recomendaciones personalizadas
-- `GET /progress/stats/by-arrhythmia` - Estadísticas por arritmia
+### Progreso y Logros
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/progress` | Progreso del usuario |
+| GET | `/achievements` | Logros desbloqueados |
 
-## 📊 Modelos de Datos
+### Sistema
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/health` | Estado de la aplicación |
 
-### Usuario
-```python
-{
-  "id": 1,
-  "name": "Dr. Juan Pérez",
-  "email": "juan@ejemplo.com",
-  "user_type": "doctor",
-  "institution": "Hospital ABC",
-  "is_active": true,
-  "created_at": "2024-02-14T10:30:00",
-  "last_login": "2024-02-14T15:45:00"
-}
-```
+## Modelo de Clasificación
 
-### Clasificación de ECG
-```python
-{
-  "id": 1,
-  "user_id": 1,
-  "predicted_class": "atrial_fibrillation",
-  "confidence": 0.94,
-  "windows_analyzed": 25,
-  "affected_windows": 12,
-  "gradcam_windows": [
-    {"x": 0, "y": 0, "width": 128, "height": 128, "confidence": 0.92}
-  ],
-  "llm_explanation": "...",
-  "processing_time_ms": 2340,
-  "created_at": "2024-02-14T16:00:00"
-}
-```
+El modelo **Hybrid CNN+LSTM+Attention** (`best_model_Hybrid_CNN_LSTM_Attention.h5`) clasifica latidos ECG en 6 clases MIT-BIH:
 
-### Intento de Práctica
-```python
-{
-  "user_id": 1,
-  "question_id": 5,
-  "selected_answer": 2,
-  "is_correct": true,
-  "time_spent_seconds": 45
-}
-```
+| Índice | Clase | Descripción |
+|--------|-------|-------------|
+| 0 | `fusion` | Latido de fusión (F) |
+| 1 | `paced` | Latido con marcapasos (M) |
+| 2 | `normal` | Latido normal (N) |
+| 3 | `unknown` | No clasificable (Q) |
+| 4 | `supraventricular_ectopic` | Extrasístole supraventricular (S) |
+| 5 | `ventricular_ectopic` | Extrasístole ventricular (V) |
 
-## 🔒 Características de Seguridad
+**Preprocesamiento** (idéntico al entrenamiento):
+1. Escala de grises → resize 128×128 (`INTER_AREA`)
+2. GaussianBlur(3,3) → normalización 0-255 → umbralización Otsu
+3. Escalado a [0, 1]
 
-✅ **Autenticación JWT**: Tokens seguros con expiración
-✅ **Hash de Contraseñas**: bcrypt con salt
-✅ **CORS Configurable**: Origen de requests permitidos
-✅ **Validación de Entrada**: Pydantic schemas
-✅ **Logging Detallado**: Auditoría de operaciones
-✅ **Validación de Archivos**: Extensiones y tamaños permitidos
-✅ **Rate Limiting**: (por implementar)
-✅ **Encriptación de Datos Sensibles**: (por implementar)
+## Variables de Entorno (referencia)
 
-## 🧪 Testing
+| Variable | Default | Descripción |
+|----------|---------|-------------|
+| `DATABASE_URL` | `sqlite:///./db/ecg_app.db` | URL de conexión a la BD |
+| `SECRET_KEY` | *(sin default seguro)* | Clave para firmar JWT |
+| `OPENAI_API_KEY` | — | API key de OpenAI para explicaciones |
+| `MODEL_PATH` | `./models/best_model_Hybrid_CNN_LSTM_Attention.h5` | Ruta al modelo H5 |
+| `IMAGE_SIZE` | `128` | Tamaño de entrada del modelo |
+| `ENVIRONMENT` | `production` | `production` o `development` |
+| `LOG_LEVEL` | `INFO` | Nivel de logging |
+
+## Modelos ML y Git LFS
+
+Los archivos `.h5` están versionados con **Git LFS**. En un clone fresco:
 
 ```bash
-# Ejecutar todos los tests
+git lfs pull   # descarga los modelos reales (~27 MB)
+```
+
+Si Git LFS no está instalado: https://git-lfs.com
+
+## Tests
+
+```bash
 pytest
-
-# Con cobertura
-pytest --cov=app
-
-# Tests específicos
-pytest tests/test_auth.py -v
+pytest --cov=app        # Con cobertura
+pytest tests/ -v        # Verbose
 ```
 
-## 📝 Variables de Entorno
+## Seguridad
 
-Ver `.env.example` para referencia:
-
-```env
-# Base de datos
-DATABASE_URL=sqlite:///./ecg_app.db
-DATABASE_ECHO=False
-
-# Seguridad
-SECRET_KEY=your-super-secret-key
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-
-# Modelo ML
-MODEL_PATH=./models/best_model_Hybrid_CNN_LSTM_Attention.h5
-IMAGE_SIZE=128
-WINDOW_SIZE=128
-WINDOW_OVERLAP=0.5
-
-# Logging
-LOG_LEVEL=INFO
-LOG_FILE=./logs/app.log
-
-# CORS
-BACKEND_CORS_ORIGINS=["http://localhost:3000","http://localhost:8080"]
-```
-
-## 🐳 Docker
- (desde raíz de TrainECG_app)
-docker-compose up -d
-```
-
-Backend estará disponible en `http://localhost:8000Construir imagen
-docker build -t ecg-backend:latest .
-
-# Ejecutar contenedor
-docker run -p 8000:8000 ecg-backend:latest
-
-# Con Docker Compose
-docker-compose up -d
-```
-
-## 📦 Dependencias Principales
-
-- **FastAPI**: Framework web moderno
-- **SQLAlchemy**: ORM para base de datos
-- **Pydantic**: Validación de datos
-- **TensorFlow/Keras**: ML e inferencia
-- **OpenCV**: Procesamiento de imágenes
-- **python-jose**: JWT tokens
-- **passlib**: Hash de contraseñas
-
-Ver `requirements.txt` para lista completa.
-
-## 📈 Performance
-
-- **Inferencia del modelo**: ~2-3 segundos por imagen
-- **Ventanas deslizantes**: Configurable (default: 128x128, overlap 50%)
-- **Base de datos**: SQLite (OK para desarrollo, PostgreSQL para producción)
-
-## 🚧 Roadmap
-
-- [ ] Implementar rutas de ECG classification
-- [ ] Implementar rutas de practice mode
-- [ ] Implementar rutas de progress tracking
-- [ ] Integración con LLM (OpenAI/Claude)
-- [ ] Rate limiting y throttling
-- [ ] Tests unitarios completos
-- [ ] Documentación de API mejorada
-- [ ] Migración a PostgreSQL
-- [ ] Caché con Redis
-- [ ] Autoscaling y load balancing
-- [ ] Monitoring con Prometheus/Grafana
-
-## 🤝 Contribución
-
-1. Crear rama feature: `git checkout -b feature/nueva-funcionalidad`
-2. Commit cambios: `git commit -am 'Agregar funcionalidad'`
-3. Push a rama: `git push origin feature/nueva-funcionalidad`
-4. Abrir Pull Request
-
-## 📄 Licencia
-
-Este proyecto es parte de una tesis de trabajo de grado.
-
-## 👨‍💼 Autor
-
-Desarrollado para: ECG Insight Mentor Platform
-Fecha: 2024
-
-## 📧 Soporte
-
-Para reportar issues o sugerencias, crear una issue en el repositorio.
+- JWT con expiración configurable
+- Contraseñas hasheadas con bcrypt
+- CORS configurable vía `BACKEND_CORS_ORIGINS`
+- Validación de archivos: extensión + tamaño máximo
+- Sin `--reload` en producción
 
 ---
 
-**Última actualización**: Febrero 2024
+**Proyecto**: Tesis de trabajo de grado — ECG Insight Mentor  
+**Última actualización**: Abril 2026
