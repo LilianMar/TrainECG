@@ -16,7 +16,9 @@ services:
       - ./backend/db:/app/db
       - ./backend/logs:/app/logs
       - ./backend/uploads:/app/uploads
-      - ./backend/models:/app/models
+      # El modelo ML queda embebido en la imagen Docker (ver backend/.dockerignore).
+      # No montar ./backend/models aquí: en servidores sin Git LFS el directorio
+      # solo contiene un puntero de texto y sobreescribiría el modelo real de la imagen.
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/openapi.json')\" 2>/dev/null || exit 1"]
