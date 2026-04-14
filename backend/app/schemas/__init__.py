@@ -25,6 +25,15 @@ from app.schemas.progress import (
     ArrhythmiaPerformance,
     UserRecommendation,
 )
+from app.schemas.chatbot import (
+    ChatbotQueryRequest,
+    ChatbotResult,
+    ChatbotQueryResponse,
+    ChatbotContext,
+    ChatbotQueryContextResponse,
+    ChatbotHistoryItem,
+    ChatbotHistoryResponse,
+)
 
 __all__ = [
     "UserCreate",
@@ -43,4 +52,11 @@ __all__ = [
     "UserProgressDetailResponse",
     "ArrhythmiaPerformance",
     "UserRecommendation",
+    "ChatbotQueryRequest",
+    "ChatbotResult",
+    "ChatbotQueryResponse",
+    "ChatbotContext",
+    "ChatbotQueryContextResponse",
+    "ChatbotHistoryItem",
+    "ChatbotHistoryResponse",
 ]

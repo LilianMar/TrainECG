@@ -8,11 +8,13 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from app.core.config import get_settings
 from app.database import engine, Base
-from app.routes import auth, users, health, ecg, practice, progress, achievements
+import app.models  # noqa: F401
+from app.routes import auth, users, health, ecg, practice, progress, achievements, chatbot
 from app.middleware.cors import setup_cors_middleware
 from app.middleware.logging import setup_logging_middleware
 from app.utils.logger import get_logger, ensure_upload_directory, ensure_logs_directory
 from app.ml_pipeline.model_manager import get_model_manager
+from app.services.chatbot_service import ChatbotService
 
 logger = get_logger(__name__)
 settings = get_settings()
@@ -37,6 +39,15 @@ def load_ml_model():
         logger.warning(f"ML model not available: {str(e)}")
 
 
+def load_chatbot_corpus():
+    """Load chatbot corpus on startup."""
+    try:
+        ChatbotService.initialize()
+        logger.info("Chatbot corpus loaded successfully")
+    except Exception as e:
+        logger.warning(f"Chatbot corpus not available: {str(e)}")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
@@ -49,6 +60,7 @@ async def lifespan(app: FastAPI):
     ensure_upload_directory()
     create_tables()
     load_ml_model()
+    load_chatbot_corpus()
     logger.info("Application started successfully")
     
     yield
@@ -89,6 +101,7 @@ def create_app() -> FastAPI:
     app.include_router(practice.router)
     app.include_router(progress.router)
     app.include_router(achievements.router)
+    app.include_router(chatbot.router)
 
     # Mount static files for practice ECG images
     uploads_path = Path(__file__).parent.parent / "uploads"

@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     # === LLM / OpenAI ===
     OPENAI_API_KEY: str = ""
     OPENAI_MODEL: str = "gpt-3.5-turbo"
-    OPENAI_MAX_TOKENS: int = 300
+    OPENAI_MAX_TOKENS: int = 200
     OPENAI_TEMPERATURE: float = 0.6
     
     # Legacy LLM settings (kept for compatibility)

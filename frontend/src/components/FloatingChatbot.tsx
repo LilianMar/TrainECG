@@ -1,15 +1,20 @@
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Send } from "lucide-react";
+import { X, Send } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getAccessToken } from "@/lib/auth";
-import corpusData from "@/lib/corpus.json";
+import { apiRequest } from "@/lib/api";
 
 interface Message {
   id: string;
   type: "user" | "bot";
   content: string;
+  meta?: {
+    confidence?: number;
+    sourceLabel?: string;
+    reinforcementTopics?: string[];
+  };
 }
 
 interface CorpusItem {
@@ -17,103 +22,24 @@ interface CorpusItem {
   categoria: string;
   pregunta: string;
   respuesta: string;
+  score: number;
 }
 
-class SimpleTFIDF {
-  private corpus: CorpusItem[];
-  private vectorIndex: Map<number, Map<string, number>> = new Map();
+interface ChatbotQueryResponse {
+  answer: string;
+  found: boolean;
+  results: CorpusItem[];
+}
 
-  constructor(corpus: CorpusItem[]) {
-    this.corpus = corpus;
-    this.buildIndex();
-  }
-
-  private tokenize(text: string): string[] {
-    return text
-      .toLowerCase()
-      .split(/\s+/)
-      .filter((token) => token.length > 2);
-  }
-
-  private buildIndex() {
-    const docCount = this.corpus.length;
-    const docFreq = new Map<string, number>();
-
-    // Contar frequency en documentos
-    this.corpus.forEach((doc) => {
-      const tokens = new Set(
-        this.tokenize(doc.pregunta + " " + doc.respuesta)
-      );
-      tokens.forEach((token) => {
-        docFreq.set(token, (docFreq.get(token) || 0) + 1);
-      });
-    });
-
-    // Calcular TF-IDF para cada documento
-    this.corpus.forEach((doc) => {
-      const tokens = this.tokenize(doc.pregunta + " " + doc.respuesta);
-      const termFreq = new Map<string, number>();
-
-      tokens.forEach((token) => {
-        termFreq.set(token, (termFreq.get(token) || 0) + 1);
-      });
-
-      const vector = new Map<string, number>();
-      termFreq.forEach((freq, token) => {
-        const idf = Math.log(docCount / (docFreq.get(token) || 1));
-        vector.set(token, freq * idf);
-      });
-
-      this.vectorIndex.set(doc.id, vector);
-    });
-  }
-
-  private cosineSimilarity(
-    vec1: Map<string, number>,
-    vec2: Map<string, number>
-  ): number {
-    let dotProduct = 0;
-    let mag1 = 0;
-    let mag2 = 0;
-
-    const allKeys = new Set([...vec1.keys(), ...vec2.keys()]);
-
-    allKeys.forEach((key) => {
-      const v1 = vec1.get(key) || 0;
-      const v2 = vec2.get(key) || 0;
-      dotProduct += v1 * v2;
-      mag1 += v1 * v1;
-      mag2 += v2 * v2;
-    });
-
-    if (mag1 === 0 || mag2 === 0) return 0;
-    return dotProduct / (Math.sqrt(mag1) * Math.sqrt(mag2));
-  }
-
-  search(query: string, topK: number = 3): CorpusItem[] {
-    const queryTokens = this.tokenize(query);
-    const queryVector = new Map<string, number>();
-
-    queryTokens.forEach((token) => {
-      queryVector.set(token, (queryVector.get(token) || 0) + 1);
-    });
-
-    const scores: Array<{ item: CorpusItem; score: number }> = [];
-
-    this.vectorIndex.forEach((vector, docId) => {
-      const doc = this.corpus.find((d) => d.id === docId);
-      if (doc) {
-        const score = this.cosineSimilarity(queryVector, vector);
-        scores.push({ item: doc, score });
-      }
-    });
-
-    return scores
-      .sort((a, b) => b.score - a.score)
-      .slice(0, topK)
-      .filter((s) => s.score > 0)
-      .map((s) => s.item);
-  }
+interface ChatbotQueryContextResponse {
+  answer: string;
+  found: boolean;
+  confidence: number;
+  sources: CorpusItem[];
+  context: {
+    skill_level: number | null;
+    recent_error_topics: string[];
+  };
 }
 
 const FloatingChatbot = () => {
@@ -131,7 +57,6 @@ const FloatingChatbot = () => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const tfidfRef = useRef<SimpleTFIDF | null>(null);
   const iconVersionRef = useRef(Date.now());
   const iconUrl = `${import.meta.env.VITE_API_URL ?? "http://localhost:8000"}/uploads/medical_chat_icon_1.svg?v=${iconVersionRef.current}`;
   const showOnRoutes = location.pathname === "/dashboard" || location.pathname === "/library";
@@ -141,12 +66,6 @@ const FloatingChatbot = () => {
     const token = getAccessToken();
     setIsAuthenticated(!!token);
   }, [location]);
-
-  useEffect(() => {
-    // Inicializar TF-IDF con el corpus
-    const corpus: CorpusItem[] = corpusData.corpus;
-    tfidfRef.current = new SimpleTFIDF(corpus);
-  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -165,30 +84,46 @@ const FloatingChatbot = () => {
     setInput("");
     setIsLoading(true);
 
-    // Simular pequeño delay para que se vea natural
-    setTimeout(() => {
-      if (tfidfRef.current) {
-        const results = tfidfRef.current.search(input, 1);
+    try {
+      const response = await apiRequest<ChatbotQueryContextResponse>("/chatbot/query-context", {
+        method: "POST",
+        body: {
+          question: input,
+          top_k: 3,
+        },
+      });
 
-        let botResponse = "";
+      const primarySource = response.sources?.[0];
+      const reinforcementTopics = (response.context?.recent_error_topics ?? []).slice(0, 3);
+      const sourceLabel = primarySource
+        ? `${primarySource.categoria.replaceAll("_", " ")} (id ${primarySource.id})`
+        : undefined;
 
-        if (results.length > 0) {
-          botResponse = results[0].respuesta;
-        } else {
-          botResponse =
-            "No encontré una respuesta exacta a tu pregunta. Intenta reformularla o consulta la sección de Biblioteca ECG para más información.";
-        }
+      const botMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        type: "bot",
+        content: response.answer,
+        meta: {
+          confidence: response.confidence,
+          sourceLabel,
+          reinforcementTopics,
+        },
+      };
 
-        const botMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          type: "bot",
-          content: botResponse,
-        };
-
-        setMessages((prev) => [...prev, botMessage]);
-      }
+      setMessages((prev) => [...prev, botMessage]);
+    } catch (error) {
+      const botMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        type: "bot",
+        content:
+          error instanceof Error
+            ? `No pude responder ahora mismo: ${error.message}`
+            : "No pude responder ahora mismo. Intenta de nuevo en unos segundos.",
+      };
+      setMessages((prev) => [...prev, botMessage]);
+    } finally {
       setIsLoading(false);
-    }, 300);
+    }
   };
 
   return (
@@ -221,7 +156,7 @@ const FloatingChatbot = () => {
               >
                 <div>
                   <h3 className="font-semibold">Asistente ECG</h3>
-                  <p className="text-xs text-white/90">Powered by TF-IDF</p>
+                  <p className="text-xs text-white/90">Powered by Backend TF-IDF</p>
                 </div>
                 <button
                   onClick={() => setIsOpen(false)}
@@ -248,6 +183,23 @@ const FloatingChatbot = () => {
                       }`}
                     >
                       <p className="break-words">{message.content}</p>
+                      {message.type === "bot" && message.meta && (
+                        <div className="mt-2 space-y-1 text-[10px] text-muted-foreground border-t pt-2">
+                          {typeof message.meta.confidence === "number" && (
+                            <p>
+                              Confianza: {(message.meta.confidence * 100).toFixed(1)}%
+                            </p>
+                          )}
+                          {message.meta.sourceLabel && (
+                            <p>Fuente: {message.meta.sourceLabel}</p>
+                          )}
+                          {!!message.meta.reinforcementTopics?.length && (
+                            <p>
+                              Reforzar: {message.meta.reinforcementTopics.join(", ").replaceAll("_", " ")}
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
