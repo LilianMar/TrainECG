@@ -11,8 +11,9 @@ train/
 docs/
 tests/
 
-# Not needed to build/run backend service image
-scripts/
+# Not needed to build/run backend service image, except chatbot corpus.
+scripts/*
+!scripts/corpus.json
 
 # Keep only inference model artifacts required at runtime.
 # Do not ignore the entire models/ directory because standalone docker run
