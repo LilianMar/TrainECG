@@ -31,6 +31,7 @@ class ECGClassificationResponse(BaseModel):
     affected_windows: int
     gradcam_windows: List[WindowCoordinate]
     annotated_image: Optional[str] = None  # Base64 image with bounding boxes
+    gradcam_image: Optional[str] = None  # Base64 Grad-CAM heatmap overlay
     llm_explanation: str
     processing_time_ms: int
     created_at: datetime

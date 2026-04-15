@@ -48,6 +48,22 @@ class GradCAM:
         try:
             import tensorflow as tf
 
+            # Ensure model input shape is always (batch, height, width, channels).
+            if image is None:
+                raise ValueError("Image cannot be None for Grad-CAM")
+
+            image = np.asarray(image, dtype=np.float32)
+            if image.ndim == 2:
+                image = np.expand_dims(image, axis=0)
+                image = np.expand_dims(image, axis=-1)
+            elif image.ndim == 3:
+                if image.shape[-1] == 1:
+                    image = np.expand_dims(image, axis=0)
+                else:
+                    image = np.expand_dims(image, axis=-1)
+            elif image.ndim != 4:
+                raise ValueError(f"Unsupported image ndim for Grad-CAM: {image.ndim}")
+
             # Create model with output at target layer
             grad_model = tf.keras.models.Model(
                 [self.model.inputs],
@@ -60,7 +76,7 @@ class GradCAM:
             with tf.GradientTape() as tape:
                 conv_outputs, predictions = grad_model(image, training=False)
                 if class_idx is None:
-                    class_idx = tf.argmax(predictions[0])
+                    class_idx = int(tf.argmax(predictions[0]).numpy())
                 class_channel = predictions[:, class_idx]
 
             # Compute gradients
@@ -75,7 +91,9 @@ class GradCAM:
             heatmap = tf.squeeze(heatmap)
 
             # Normalize to 0-1
-            heatmap = tf.maximum(heatmap, 0) / tf.math.reduce_max(heatmap)
+            denom = tf.math.reduce_max(heatmap)
+            heatmap = tf.maximum(heatmap, 0)
+            heatmap = tf.where(denom > 0, heatmap / denom, heatmap)
             heatmap = heatmap.numpy()
 
             return heatmap

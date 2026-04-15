@@ -150,7 +150,7 @@ const Register = () => {
                   <SelectContent>
                     <SelectItem value="student">Estudiante de Medicina</SelectItem>
                     <SelectItem value="resident">Médico Residente</SelectItem>
-                    <SelectItem value="doctor">Médico Especialista</SelectItem>
+                    <SelectItem value="doctor">Médico General</SelectItem>
                     <SelectItem value="nurse">Enfermero/a</SelectItem>
                     <SelectItem value="other">Otro Profesional de Salud</SelectItem>
                   </SelectContent>

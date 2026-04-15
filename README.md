@@ -11,10 +11,10 @@ Monorepo with a FastAPI backend and a React (Vite) frontend for ECG training and
 
 ## Quick Start (Docker)
 
-1) Create frontend environment file:
+1) Create root environment file (used by docker compose):
 
 ```bash
-cp frontend/.env.example frontend/.env
+cp .env.example .env
 ```
 
 2) Build and run:
@@ -50,6 +50,7 @@ npm run dev
 
 ## Notes
 
-- Frontend uses `VITE_API_URL` from frontend/.env to reach the backend.
+- Docker reads variables from `.env` in the repository root.
+- For local development (no Docker), backend and frontend each use their own `.env` file copied from `backend/.env.example` and `frontend/.env.example`.
 - ML models in `backend/models/` are pre-trained artifacts (best_model_Hybrid_CNN_LSTM_Attention.h5, etc.).
 - Test suite in `test/` implements plan_pruebas.tex specifications (data quality, model metrics, functional, performance, usability).

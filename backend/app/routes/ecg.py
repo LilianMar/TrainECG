@@ -2,17 +2,20 @@
 ECG classification routes.
 """
 
-from collections import Counter
+import base64
 from pathlib import Path
 import shutil
 import time
 
+import cv2
+import numpy as np
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.database import get_db
-from app.ml_pipeline import get_model_manager, get_preprocessor, get_image_annotator
+from app.ml_pipeline import get_model_manager, get_preprocessor
+from app.ml_pipeline.grad_cam import get_gradcam
 from app.models.user import User
 from app.routes.users import get_current_user
 from app.schemas.ecg import ECGClassificationResponse, WindowCoordinate
@@ -80,11 +83,9 @@ async def classify_ecg(
         full_arr, original_image = preprocessor.preprocess_for_classification(str(upload_path))
         img_height, img_width = original_image.shape[:2]
 
-        # Ventanas solo para anotación visual (sin clasificar individualmente)
-        windows, coordinates, _ = preprocessor.preprocess_pipeline(str(upload_path))
+        # Coordenadas de bandas ECG para trazabilidad en respuesta/BD.
+        _, coordinates, _ = preprocessor.preprocess_pipeline(str(upload_path))
         preprocess_time_ms = int((time.perf_counter() - preprocess_start) * 1000)
-
-        window_width = max(min(img_height, img_width), 64)
 
         # 2. INFERENCIA sobre imagen completa
         inference_start = time.perf_counter()
@@ -92,19 +93,60 @@ async def classify_ecg(
         main_class, main_confidence = model_manager.predict(full_arr)
         inference_time_ms = int((time.perf_counter() - inference_start) * 1000)
 
-        # Ventanas afectadas para anotación: marcar todas si confianza > 0.7
-        predictions: list[tuple[str, float, int]] = [(main_class, main_confidence, 0)]
+        # Bandas afectadas para explicación: marcar todas si confianza > 0.7
         affected_windows: list[tuple[int, float]] = [
             (i, main_confidence)
-            for i in range(len(windows))
+            for i in range(len(coordinates))
             if main_confidence > 0.7
         ]
 
-        # 3. GENERACIÓN GRAD-CAM y coordinadas de ventanas
+        # 3. GRAD-CAM sobre imagen completa (mapa de calor sobre el trazo)
         gradcam_start = time.perf_counter()
+        gradcam_image_base64: str | None = None
+        try:
+            gradcam = get_gradcam(model_manager.get_model())
+            full_arr_4d = np.asarray(full_arr, dtype=np.float32)
+            if full_arr_4d.ndim == 2:
+                full_arr_4d = np.expand_dims(full_arr_4d, axis=0)
+                full_arr_4d = np.expand_dims(full_arr_4d, axis=-1)
+            elif full_arr_4d.ndim == 3:
+                if full_arr_4d.shape[-1] == 1:
+                    full_arr_4d = np.expand_dims(full_arr_4d, axis=0)
+                else:
+                    full_arr_4d = np.expand_dims(full_arr_4d, axis=-1)
+
+            heatmap = gradcam.compute_gradcam(full_arr_4d)
+
+            # Alinear Grad-CAM al trazo: usar la máscara binaria del mismo input
+            # que ve el modelo (fondo blanco=1, trazo negro=0).
+            trace_mask = 1.0 - full_arr_4d[0, :, :, 0]
+            trace_mask = cv2.resize(
+                trace_mask,
+                (heatmap.shape[1], heatmap.shape[0]),
+                interpolation=cv2.INTER_AREA,
+            )
+            heatmap = heatmap * trace_mask
+            max_value = float(heatmap.max())
+            if max_value > 0:
+                heatmap = heatmap / max_value
+
+            # Usar la misma imagen del preprocesador evita diferencias geométricas
+            # con respecto al tensor de entrada del modelo.
+            overlay_base = cv2.cvtColor(original_image, cv2.COLOR_GRAY2BGR)
+            overlay = gradcam.overlay_heatmap(overlay_base, heatmap, alpha=0.4)
+            success, buffer = cv2.imencode(".png", overlay)
+            if success:
+                gradcam_image_base64 = (
+                    "data:image/png;base64," + base64.b64encode(buffer).decode()
+                )
+        except Exception as e:
+            logger.warning(f"Failed to compute Grad-CAM: {str(e)}")
+
+        # Mantener coordenadas en respuesta/BD para trazabilidad histórica,
+        # pero sin generar overlay de recuadros en la imagen final.
         gradcam_windows: list[WindowCoordinate] = []
-        affected_windows_data: list[tuple[int, int, int, int, float]] = []  # For annotation
-        
+        window_width = max(min(img_height, img_width), 64)
+
         for window_idx, conf in affected_windows:
             x, y_center, region_height = coordinates[window_idx]
             
@@ -123,22 +165,11 @@ async def classify_ecg(
                     confidence=float(conf),
                 )
             )
-            # Add to annotation data (x, y, width, height, confidence)
-            affected_windows_data.append((x, y_start, window_width, rect_height, conf))
         gradcam_time_ms = int((time.perf_counter() - gradcam_start) * 1000)
 
-        # 4. ANOTACIÓN DE IMAGEN
+        # 4. Método antiguo deshabilitado: no generar imagen con recuadros.
         annotate_start = time.perf_counter()
         annotated_image_base64 = None
-        if affected_windows_data:
-            try:
-                image_annotator = get_image_annotator()
-                _, annotated_image_base64 = image_annotator.create_annotated_image_base64(
-                    str(upload_path), affected_windows_data
-                )
-            except Exception as e:
-                logger.warning(f"Failed to create annotated image: {str(e)}")
-                # Continue without annotated image
         annotate_time_ms = int((time.perf_counter() - annotate_start) * 1000)
 
         # 5. GENERACIÓN LLM (OpenAI)
@@ -167,7 +198,7 @@ async def classify_ecg(
             image_path=str(upload_path),
             predicted_class=main_class,
             confidence=float(main_confidence),
-            windows_analyzed=len(windows),
+            windows_analyzed=len(coordinates),
             affected_windows=len(affected_windows),
             gradcam_windows=gradcam_windows,
             llm_explanation=llm_explanation,
@@ -203,6 +234,7 @@ async def classify_ecg(
             affected_windows=classification.affected_windows,
             gradcam_windows=gradcam_windows,
             annotated_image=annotated_image_base64,
+            gradcam_image=gradcam_image_base64,
             llm_explanation=classification.llm_explanation,
             processing_time_ms=classification.processing_time_ms,
             created_at=classification.created_at,

@@ -16,6 +16,7 @@ const ClassifyECG = () => {
     recommendations: string[];
     explanation: string;
     annotated_image?: string;
+    gradcam_image?: string;
   } | null>(null);
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [isDragActive, setIsDragActive] = useState(false);
@@ -85,6 +86,7 @@ const ClassifyECG = () => {
         confidence: number;
         llm_explanation: string;
         annotated_image?: string;
+        gradcam_image?: string;
       }>("/ecg/classify", {
         method: "POST",
         body: formData,
@@ -116,6 +118,7 @@ const ClassifyECG = () => {
         ],
         explanation: response.llm_explanation || "Sin explicacion adicional disponible.",
         annotated_image: response.annotated_image,
+        gradcam_image: response.gradcam_image,
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : "No se pudo analizar el ECG";
@@ -267,25 +270,39 @@ const ClassifyECG = () => {
                       </p>
                     </div>
                     
-                    {/* Display annotated image if available */}
-                    {analysisResult.annotated_image && (
-                      <div className="p-4 bg-secondary rounded-lg">
-                        <h4 className="font-medium mb-3 text-sm">
-                          📊 ECG Analizado - Regiones de Detección Encerradas (Rectángulos Rojos)
-                        </h4>
-                        <img
-                          src={analysisResult.annotated_image}
-                          alt="ECG Anotado con Arritmias"
-                          className="w-full h-auto rounded-lg border border-border"
-                          style={{ maxHeight: '400px', objectFit: 'contain' }}
-                        />
-                        <p className="text-xs text-muted-foreground mt-2">
-                          Los rectángulos rojos indican las regiones donde el modelo detectó el patrón de &quot;{analysisResult.arrhythmia}&quot;.
-                          El porcentaje en cada rectángulo es la confianza del modelo para esa ventana.
-                        </p>
+                    {(analysisResult.gradcam_image || analysisResult.annotated_image) && (
+                      <div className="p-4 bg-secondary rounded-lg space-y-3">
+                        {analysisResult.gradcam_image ? (
+                          <>
+                            <h4 className="font-medium text-sm">
+                              Mapa de calor Grad-CAM
+                            </h4>
+                            <img
+                              src={analysisResult.gradcam_image}
+                              alt="Grad-CAM Heatmap ECG"
+                              className="w-full h-auto rounded-lg border border-border"
+                              style={{ maxHeight: "400px", objectFit: "contain" }}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              Las zonas en rojo/amarillo señalan las regiones del trazo que más pesaron en la decisión del modelo; las azules aportaron menos.
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <h4 className="font-medium text-sm">
+                              Visualización alternativa (sin heatmap disponible)
+                            </h4>
+                            <img
+                              src={analysisResult.annotated_image}
+                              alt="ECG Anotado con Arritmias"
+                              className="w-full h-auto rounded-lg border border-border"
+                              style={{ maxHeight: "400px", objectFit: "contain" }}
+                            />
+                          </>
+                        )}
                       </div>
                     )}
-                    
+
                     <div className="p-4 bg-secondary rounded-lg">
                       <h4 className="font-medium mb-2">Explicación Clínica:</h4>
                       <p className="text-sm text-muted-foreground">

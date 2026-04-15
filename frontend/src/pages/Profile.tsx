@@ -58,6 +58,18 @@ const Profile = () => {
   const [recentActivity, setRecentActivity] = useState<Activity[]>([]);
   const [location, setLocation] = useState<string>("No disponible");
 
+  const userTypeLabel = (userType?: string): string => {
+    const labels: Record<string, string> = {
+      student: "Estudiante de Medicina",
+      resident: "Médico Residente",
+      doctor: "Médico General",
+      nurse: "Enfermero/a",
+      other: "Otro Profesional de Salud",
+    };
+    if (!userType) return "";
+    return labels[userType] ?? userType;
+  };
+
   useEffect(() => {
     const loadProfile = async () => {
       try {
@@ -340,7 +352,7 @@ const Profile = () => {
                           <Label htmlFor="userType">Tipo de usuario</Label>
                           <Input
                             id="userType"
-                            value={userProfile?.userType || ""}
+                            value={userTypeLabel(userProfile?.userType)}
                             disabled
                             className="mt-1 bg-muted"
                           />
@@ -357,7 +369,7 @@ const Profile = () => {
                           </h2>
                           <div className="flex gap-2 mb-2">
                             <Badge variant="secondary">
-                              {userProfile?.userType || ""}
+                              {userTypeLabel(userProfile?.userType)}
                             </Badge>
                             {userProfile?.skillLevel && (
                               <Badge variant="outline" className="bg-primary/10 border-primary text-primary">
