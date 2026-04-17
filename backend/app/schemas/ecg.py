@@ -34,6 +34,7 @@ class ECGClassificationResponse(BaseModel):
     gradcam_image: Optional[str] = None  # Base64 Grad-CAM heatmap overlay
     llm_explanation: str
     processing_time_ms: int
+    is_fallback: bool = False
     created_at: datetime
 
     class Config:

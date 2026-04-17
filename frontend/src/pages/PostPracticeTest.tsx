@@ -315,17 +315,10 @@ const PostPracticeTest = () => {
           )}
 
           {/* Action Buttons */}
-          <div className="flex gap-4">
-            <Button
-              onClick={() => navigate("/dashboard")}
-              variant="outline"
-              className="flex-1"
-            >
-              Volver a Práctica
-            </Button>
+          <div>
             <Button
               onClick={() => navigate("/progress")}
-              className="btn-medical flex-1"
+              className="btn-medical w-full"
             >
               Ver Progreso Completo
             </Button>

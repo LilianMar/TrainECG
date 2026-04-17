@@ -239,18 +239,10 @@ const InitialTest = () => {
                     </p>
                   </div>
 
-                  <div className="flex gap-4 pt-4">
-                    <Button
-                      onClick={() => navigate("/dashboard")}
-                      variant="outline"
-                      className="flex-1"
-                    >
-                      <ArrowLeft className="w-4 h-4 mr-2" />
-                      Volver al Dashboard
-                    </Button>
+                  <div className="pt-4">
                     <Button
                       onClick={handleSubmitInitialTest}
-                      className="btn-medical flex-1"
+                      className="btn-medical w-full"
                     >
                       Comenzar Práctica
                     </Button>

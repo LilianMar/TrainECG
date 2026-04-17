@@ -75,7 +75,7 @@ async def get_detailed_progress(
     """Get detailed progress with recommendations."""
     progress = ProgressService.get_or_create_progress(db, current_user.id)
     performance = ProgressService.get_arrhythmia_performance(db, current_user.id)
-    recommendations = ProgressService.generate_recommendations(db, current_user.id)
+    recommendations = ProgressService.generate_recommendations(db, current_user.id, current_user.name)
 
     return UserProgressDetailResponse(
         progress=progress,
@@ -90,7 +90,7 @@ async def get_recommendations(
     current_user: User = Depends(get_current_user),
 ):
     """Get personalized recommendations based on performance."""
-    recommendations = ProgressService.generate_recommendations(db, current_user.id)
+    recommendations = ProgressService.generate_recommendations(db, current_user.id, current_user.name)
     return recommendations
 
 

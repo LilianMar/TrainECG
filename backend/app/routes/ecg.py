@@ -63,16 +63,17 @@ async def classify_ecg(
 
         upload_path = _ensure_upload_path(file.filename)
 
-        with open(upload_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-
-        file_size = get_file_size_mb(str(upload_path))
-        if file_size > settings.MAX_UPLOAD_SIZE_MB:
-            upload_path.unlink(missing_ok=True)
+        # Read file content with size limit to prevent disk-filling DoS
+        max_bytes = settings.MAX_UPLOAD_SIZE_MB * 1024 * 1024
+        content = await file.read(max_bytes + 1)
+        if len(content) > max_bytes:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"File too large. Max: {settings.MAX_UPLOAD_SIZE_MB}MB",
             )
+
+        with open(upload_path, "wb") as buffer:
+            buffer.write(content)
 
         preprocess_start = time.perf_counter()
         preprocessor = get_preprocessor()
@@ -237,6 +238,7 @@ async def classify_ecg(
             gradcam_image=gradcam_image_base64,
             llm_explanation=classification.llm_explanation,
             processing_time_ms=classification.processing_time_ms,
+            is_fallback=model_manager.is_fallback_mode(),
             created_at=classification.created_at,
         )
         

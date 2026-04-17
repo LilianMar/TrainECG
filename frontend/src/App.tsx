@@ -14,6 +14,7 @@ import PostPracticeTest from "./pages/PostPracticeTest";
 import Progress from "./pages/Progress";
 import Profile from "./pages/Profile";
 import Library from "./pages/Library";
+import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
 import FloatingChatbot from "./components/FloatingChatbot";
 
@@ -29,6 +30,7 @@ const App = () => (
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/terms" element={<Terms />} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/classify" element={<ProtectedRoute><ClassifyECG /></ProtectedRoute>} />
           <Route path="/practice" element={<ProtectedRoute><PracticeMode /></ProtectedRoute>} />

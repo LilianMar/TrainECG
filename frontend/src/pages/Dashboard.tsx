@@ -1,4 +1,4 @@
-import { Heart, Upload, Brain, BarChart3, BookOpen, Target, CheckCircle2, TrendingUp } from "lucide-react";
+import { Upload, Brain, BarChart3, BookOpen, Target, CheckCircle2, TrendingUp } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

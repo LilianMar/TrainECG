@@ -19,6 +19,7 @@ from app.schemas.ecg import (
 from app.services.ecg_service import ECGService
 from app.services.progress_service import ProgressService
 from app.services.llm_service import LLMService
+from app.services.achievement_service import AchievementService
 from app.utils import get_logger
 
 logger = get_logger(__name__)
@@ -334,6 +335,42 @@ async def post_practice_test(
         )
         db.add(post_test)
         db.commit()
+
+        # Build arrhythmia accuracy breakdown from this test attempt
+        arrhythmia_totals = {}
+        for qa in question_answers:
+            arrhythmia_name = qa.get("correct_class")
+            if not arrhythmia_name:
+                continue
+
+            if arrhythmia_name not in arrhythmia_totals:
+                arrhythmia_totals[arrhythmia_name] = {"total": 0, "correct": 0}
+
+            arrhythmia_totals[arrhythmia_name]["total"] += 1
+            if qa.get("is_correct"):
+                arrhythmia_totals[arrhythmia_name]["correct"] += 1
+
+        arrhythmia_breakdown = [
+            {
+                "name": arrhythmia_name,
+                "accuracy": (
+                    (stats["correct"] / stats["total"]) * 100
+                    if stats["total"] > 0
+                    else 0
+                ),
+            }
+            for arrhythmia_name, stats in arrhythmia_totals.items()
+        ]
+
+        AchievementService.check_and_unlock_badges(
+            db=db,
+            user_id=current_user.id,
+            test_attempt_id=post_test.id,
+            test_data={
+                "accuracy": accuracy,
+                "arrhythmia_breakdown": arrhythmia_breakdown,
+            },
+        )
 
         # Generate recommendations using LLM
         recommendations = LLMService.generate_recommendations(

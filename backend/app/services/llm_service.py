@@ -83,6 +83,7 @@ class LLMService:
         accuracy: float,
         weak_areas: List[str],
         incorrect_answers: Optional[List[dict]] = None,
+        user_name: str = "estudiante",
     ) -> str:
         """
         Generate personalized progress recommendations using GPT.
@@ -102,7 +103,7 @@ class LLMService:
         if not client_instance:
             logger.warning("OpenAI API key not configured. Using fallback recommendations.")
             return LLMService._fallback_progress_recommendations(
-                arrhythmia_performance, test_attempts, accuracy, weak_areas, incorrect_answers
+                arrhythmia_performance, test_attempts, accuracy, weak_areas, incorrect_answers, user_name
             )
 
         try:
@@ -132,7 +133,7 @@ class LLMService:
                             incorrect_summary += f"  • {q[:100]}...\n"
 
             prompt = f"""Eres un cardiólogo educador especializado en interpretacion de ECG. 
-Un estudiante ha estado practicando y completó {test_attempts} tests con una precisión general del {accuracy:.1f}%.
+El usuario {user_name} ha estado practicando y completó {test_attempts} tests con una precisión general del {accuracy:.1f}%.
 
 DESEMPEÑO POR ARRITMIA:
 {performance_summary if performance_summary else "Sin datos de tests aún"}
@@ -165,7 +166,7 @@ Responde en HTML simple (divs y párrafos). Máximo 300 tokens. Sé conciso, pr�
 
             return f"""
 <div style="margin: 20px 0; padding: 15px; border-radius: 8px;">
-    
+    <p><strong>Hola, {user_name}.</strong></p>
     {clean_html}
 </div>
 """
@@ -217,11 +218,10 @@ Responde en HTML simple (divs y párrafos). Máximo 300 tokens. Sé conciso, pr�
 DATOS DEL ANÁLISIS:
 - Tipo de latido detectado: {predicted_class.replace('_', ' ').title()}
 - Confianza del modelo: {confidence*100:.1f}%
-- Ventanas con este tipo de latido: {affected_windows}
 - Nivel del estudiante: {skill_descriptions.get(user_skill_level, 'estudiante')}
 
 Proporciona una BREVE pero COMPLETA explicación de qué caracteriza este tipo de latido, su significado clínico y tips para identificarlo en ECGs.
-Adapta el lenguaje al nivel del estudiante.
+Adapta el lenguaje al nivel del estudiante, tener en cuenta el estudiante necesita entender por qué el sistema llegó a esa clasificación, desde la imagen de un electrocardiograma para poder aprender a identificarlo por sí mismo en el futuro.
 
 Responde en TEXTO PLANO sin HTML. Máximo 300 tokens."""
 
@@ -257,10 +257,12 @@ Responde en TEXTO PLANO sin HTML. Máximo 300 tokens."""
         accuracy: float,
         weak_areas: List[str],
         incorrect_answers: Optional[List[dict]] = None,
+        user_name: str = "estudiante",
     ) -> str:
         """Fallback when OpenAI is unavailable."""
         return f"""
 <div style="margin: 20px 0;">
+    <p><strong>Hola, {user_name}.</strong></p>
     <h3> Recomendaciones (Asistente Local)</h3>
     <p>Has completado <strong>{test_attempts} tests</strong> con una precisión del <strong>{accuracy:.1f}%</strong>.</p>
     

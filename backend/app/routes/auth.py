@@ -14,7 +14,7 @@ from app.schemas.user import (
     TokenResponse,
 )
 from app.services.user_service import UserService
-from app.security.auth import create_access_token, create_refresh_token
+from app.security.auth import create_access_token
 from app.core.config import get_settings
 from app.utils.logger import get_logger
 
@@ -51,10 +51,9 @@ async def register(
         # Create user
         user = UserService.create_user(db, user_create)
         
-        # Generate tokens
+        # Generate token
         access_token = create_access_token(user.id)
-        refresh_token = create_refresh_token(user.id)
-        
+
         return TokenResponse(
             access_token=access_token,
             token_type="bearer",
@@ -105,10 +104,9 @@ async def login(
                 detail="User account is deactivated"
             )
         
-        # Generate tokens
+        # Generate token
         access_token = create_access_token(user.id)
-        refresh_token = create_refresh_token(user.id)
-        
+
         logger.info(f"User logged in: {user.email}")
         
         return TokenResponse(

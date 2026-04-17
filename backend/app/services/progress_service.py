@@ -233,7 +233,7 @@ class ProgressService:
 
     @staticmethod
     def generate_recommendations(
-        db: Session, user_id: int
+        db: Session, user_id: int, user_name: str = "estudiante"
     ) -> dict:
         """
         Generate personalized recommendations using GPT.
@@ -287,6 +287,7 @@ class ProgressService:
             accuracy=overall_accuracy,
             weak_areas=weak_areas,
             incorrect_answers=incorrect_answers,
+            user_name=user_name,
         )
         
         return {

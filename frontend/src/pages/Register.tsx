@@ -222,11 +222,11 @@ const Register = () => {
                 />
                 <label className="text-xs text-muted-foreground">
                   Acepto los{" "}
-                  <Link to="/terms" className="text-primary hover:underline">
+                  <Link to="/terms" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
                     términos y condiciones
                   </Link>
                   {" "}y la{" "}
-                  <Link to="/privacy" className="text-primary hover:underline">
+                  <Link to="/terms" className="text-primary hover:underline">
                     política de privacidad
                   </Link>
                 </label>

@@ -137,29 +137,6 @@ class ECGService:
             raise
 
     @staticmethod
-    def get_user_practice_stats(
-        db: Session, user_id: int
-    ) -> Tuple[int, int, float]:
-        """
-        Get user's practice statistics.
-
-        Returns:
-            Tuple of (total_attempts, correct_answers, accuracy_percentage)
-        """
-        attempts = db.query(PracticeAttempt).filter(
-            PracticeAttempt.user_id == user_id
-        ).all()
-
-        if not attempts:
-            return 0, 0, 0.0
-
-        total = len(attempts)
-        correct = sum(1 for attempt in attempts if attempt.is_correct == "True")
-        accuracy = (correct / total) * 100 if total > 0 else 0.0
-
-        return total, correct, accuracy
-
-    @staticmethod
     def create_practice_question(
         db: Session,
         image_filename: str,

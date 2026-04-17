@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.models.achievement import UserAchievement, BADGE_DEFINITIONS
 from app.models.progress import UserProgress
-from app.models.ecg import ECGClassification
+from app.models.ecg import ECGClassification, PostPracticeTest
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -135,8 +135,12 @@ class AchievementService:
             if achievement:
                 unlocked.append(achievement)
 
-        # 2. First diagnostic test
-        if classifications == 1:
+        # 2. First diagnostic test (must be a real post-practice test)
+        post_tests_completed = db.query(PostPracticeTest).filter(
+            PostPracticeTest.user_id == user_id
+        ).count()
+
+        if post_tests_completed >= 1:
             achievement = AchievementService.unlock_achievement(
                 db, user_id, "diagnostic_complete", test_attempt_id
             )
@@ -195,12 +199,8 @@ class AchievementService:
             if achievement:
                 unlocked.append(achievement)
 
-        # 7. Three tests completed
-        tests_completed = db.query(ECGClassification).filter(
-            ECGClassification.user_id == user_id
-        ).count()
-        
-        if tests_completed >= 3:
+        # 7. Three post-practice tests completed
+        if post_tests_completed >= 3:
             achievement = AchievementService.unlock_achievement(
                 db, user_id, "three_tests", test_attempt_id
             )

@@ -58,8 +58,15 @@ const FloatingChatbot = () => {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const iconVersionRef = useRef(Date.now());
-  const iconUrl = `${import.meta.env.VITE_API_URL ?? "http://localhost:8000"}/uploads/medical_chat_icon_1.svg?v=${iconVersionRef.current}`;
+  const primaryIconUrl = `${import.meta.env.BASE_URL}medical_chat_icon_1.svg?v=${iconVersionRef.current}`;
+  const fallbackIconUrl = `${import.meta.env.BASE_URL}medical_chat_icon_2.svg?v=${iconVersionRef.current}`;
+  const [iconUrl, setIconUrl] = useState(primaryIconUrl);
   const showOnRoutes = location.pathname === "/dashboard" || location.pathname === "/library";
+
+  useEffect(() => {
+    // Reinicia el icono cuando cambia la ruta para evitar estado de fallback persistente.
+    setIconUrl(primaryIconUrl);
+  }, [location.pathname, primaryIconUrl]);
 
   useEffect(() => {
     // Verificar autenticación cada vez que cambia la ubicación
@@ -140,6 +147,11 @@ const FloatingChatbot = () => {
               src={iconUrl}
               alt="Chat medico"
               className="w-full h-full object-cover"
+              onError={() => {
+                if (iconUrl !== fallbackIconUrl) {
+                  setIconUrl(fallbackIconUrl);
+                }
+              }}
             />
           </button>
 
@@ -185,11 +197,6 @@ const FloatingChatbot = () => {
                       <p className="break-words">{message.content}</p>
                       {message.type === "bot" && message.meta && (
                         <div className="mt-2 space-y-1 text-[10px] text-muted-foreground border-t pt-2">
-                          {typeof message.meta.confidence === "number" && (
-                            <p>
-                              Confianza: {(message.meta.confidence * 100).toFixed(1)}%
-                            </p>
-                          )}
                           {message.meta.sourceLabel && (
                             <p>Fuente: {message.meta.sourceLabel}</p>
                           )}

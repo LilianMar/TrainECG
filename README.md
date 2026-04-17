@@ -53,4 +53,5 @@ npm run dev
 - Docker reads variables from `.env` in the repository root.
 - For local development (no Docker), backend and frontend each use their own `.env` file copied from `backend/.env.example` and `frontend/.env.example`.
 - ML models in `backend/models/` are pre-trained artifacts (best_model_Hybrid_CNN_LSTM_Attention.h5, etc.).
+- In ECG classification, the main explainability output is the full-image Grad-CAM heatmap (`gradcam_image`).
 - Test suite in `test/` implements plan_pruebas.tex specifications (data quality, model metrics, functional, performance, usability).

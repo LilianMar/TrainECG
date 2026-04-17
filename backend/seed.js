@@ -367,6 +367,54 @@ const PRACTICE_QUESTIONS = [
     correct_class: "sinus_bradycardia",
     difficulty_level: 1,
   },
+  {
+    id: 21,
+    image_filename: "ecg_img_9.png",
+    image_path: "/uploads/practice_ecgs/ecg_img_9.png",
+    question_text:
+      "¿Cuál es el componente normal del electrocardiograma que representa la repolarización ventricular?",
+    option_a: "Onda P",
+    option_b: "Complejo QRS",
+    option_c: "Onda T",
+    option_d: "Intervalo PR",
+    correct_answer: 2,
+    explanation:
+      "La onda T representa la repolarización ventricular, es decir, el retorno del miocardio ventricular al estado de reposo eléctrico después de la despolarización (complejo QRS). Normalmente es positiva en la mayoría de derivaciones, excepto en aVR. Una onda T invertida o anormal puede indicar isquemia miocárdica o repolarización anormal.",
+    correct_class: "normal",
+    difficulty_level: 1,
+  },
+  {
+    id: 22,
+    image_filename: "ecg_case_1.png",
+    image_path: "/uploads/practice_ecgs/ecg_case_1.png",
+    question_text:
+      "¿Cuál es la frecuencia cardiaca normal en ritmo sinusal en un adulto en reposo?",
+    option_a: "40-60 lpm",
+    option_b: "60-100 lpm",
+    option_c: "100-120 lpm",
+    option_d: "Más de 120 lpm",
+    correct_answer: 1,
+    explanation:
+      "La frecuencia cardiaca normal en adultos en reposo durante ritmo sinusal es de 60-100 latidos por minuto (lpm). Por debajo de 60 se considera bradicardia, y por encima de 100 se considera taquicardia. Sin embargo, en deportistas bien entrenados una FC de 40-60 lpm puede ser normal y fisiológica.",
+    correct_class: "normal",
+    difficulty_level: 1,
+  },
+  {
+    id: 23,
+    image_filename: "ecg_case_2.png",
+    image_path: "/uploads/practice_ecgs/ecg_case_2.png",
+    question_text:
+      "¿Qué representa el intervalo PR en el electrocardiograma?",
+    option_a: "El tiempo de conducción desde el nodo sinusal hasta el inicio de la despolarización ventricular",
+    option_b: "La duración total de la despolarización ventricular",
+    option_c: "El tiempo de repolarización ventricular",
+    option_d: "La frecuencia cardiaca en latidos por minuto",
+    correct_answer: 0,
+    explanation:
+      "El intervalo PR representa el tiempo de conducción desde la despolarización auricular (inicio de la onda P) hasta el inicio de la despolarización ventricular (inicio del complejo QRS). Normalmente mide 120-200 milisegundos (0.12-0.20 segundos). Un PR prolongado puede indicar bloqueo AV de primer grado, y un PR acortado puede estar asociado a síndromes de preexcitación como Wolff-Parkinson-White.",
+    correct_class: "normal",
+    difficulty_level: 1,
+  },
 ];
 
 // ─── Datos: usuario administrador/demo ────────────────────────────────────

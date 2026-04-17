@@ -309,7 +309,7 @@ const Progress = () => {
           {/* Accuracy Distribution */}
           <Card className="medical-card">
             <CardHeader>
-              <CardTitle>Distribución de Respuestas en Test</CardTitle>
+              <CardTitle>Distribución de Respuestas</CardTitle>
             </CardHeader>
             <CardContent>
               {progressData && progressData.total_practice_attempts > 0 ? (

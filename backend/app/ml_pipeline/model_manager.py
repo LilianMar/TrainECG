@@ -208,6 +208,19 @@ class ModelManager:
                 logger.info("Model loaded successfully from %s", candidate_path)
                 logger.info("Model input shape: %s", self._model.input_shape)
                 logger.info("Model output shape: %s", self._model.output_shape)
+
+                # Validate output shape matches expected number of classes (F,M,N,Q,S,V)
+                expected_classes = 6
+                output_classes = self._model.output_shape[-1]
+                if output_classes != expected_classes:
+                    logger.error(
+                        "Model output shape mismatch: expected %d classes, got %s",
+                        expected_classes, output_classes,
+                    )
+                    self._model = None
+                    self._fallback_mode = True
+                    continue
+
                 return
             except Exception as e:
                 last_error = e

@@ -8,7 +8,8 @@ Construida con **FastAPI** y **SQLite** (SQLAlchemy), proporciona:
 
 - Autenticación y gestión de usuarios (JWT + bcrypt)
 - Clasificación de ECG con modelo Hybrid CNN+LSTM+Attention
-- Anotación visual de regiones relevantes por ventana deslizante
+- Grad-CAM sobre imagen completa como salida visual principal de explicabilidad
+- Coordenadas de regiones afectadas para trazabilidad (anotación rectangular en modo legado/compatibilidad)
 - Módulo de práctica con preguntas clínicas y retroalimentación
 - Test posterior a la práctica con ajuste de nivel de habilidad
 - Seguimiento de progreso y logros (badges)
@@ -51,8 +52,8 @@ backend/
 │   ├── ml_pipeline/
 │   │   ├── model_manager.py         # Carga del modelo H5 y predicción
 │   │   ├── image_preprocessor.py    # Preprocesamiento (Blur+Normalize+Otsu)
-│   │   ├── image_annotator.py       # Anotación de imagen con ventanas
-│   │   └── grad_cam.py              # Interpretabilidad (no activo en clasificación)
+│   │   ├── image_annotator.py       # Anotación rectangular (legado/compatibilidad)
+│   │   └── grad_cam.py              # Interpretabilidad activa en clasificación
 │   ├── middleware/
 │   │   ├── cors.py
 │   │   └── logging.py
@@ -96,7 +97,7 @@ docker compose up --build
 Esto ejecuta en orden:
 1. **backend** — construye la imagen Python, inicia uvicorn, crea tablas SQLAlchemy
 2. **frontend** — construye Vite + nginx, sirve en puerto 9000
-3. **seed** — espera a que el backend esté healthy, luego inyecta las 20 preguntas de práctica y el usuario demo
+3. **seed** — espera a que el backend esté healthy, luego inyecta 20 preguntas de práctica en BD; cada sesión de práctica selecciona aleatoriamente 10 de ellas
 
 La base de datos se persiste en `./backend/db/ecg_app.db` (bind mount).
 
@@ -192,6 +193,11 @@ El modelo **Hybrid CNN+LSTM+Attention** (`best_model_Hybrid_CNN_LSTM_Attention.h
 1. Escala de grises → resize 128×128 (`INTER_AREA`)
 2. GaussianBlur(3,3) → normalización 0-255 → umbralización Otsu
 3. Escalado a [0, 1]
+
+**Salida de explicabilidad en clasificación**:
+- `gradcam_image`: mapa de calor Grad-CAM en base64 (salida principal mostrada en frontend).
+- `gradcam_windows`: coordenadas de trazabilidad de regiones afectadas.
+- `annotated_image`: campo legado; actualmente no es la salida principal.
 
 ## Variables de Entorno (referencia)
 
