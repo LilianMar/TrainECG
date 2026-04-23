@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -52,6 +52,15 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-6">
       <div className="w-full max-w-md">
+        {/* Back to landing */}
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1.5 text-sm text-white/80 hover:text-white transition-colors mb-6"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Volver al inicio
+        </Link>
+
         {/* Logo and Title */}
         <div className="text-center mb-8">
           <div className="w-32 h-32 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-teal p-4">
