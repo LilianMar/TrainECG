@@ -32,8 +32,10 @@ db/*.db
 logs/
 *.log
 
-# Uploads
-uploads/
+# Uploads (runtime user uploads) — pero conservar las imágenes de práctica
+uploads/*
+!uploads/practice_ecgs/
+!uploads/practice_ecgs/**
 
 # ML Models — tracked via Git LFS (.gitattributes: *.h5 filter=lfs)
 # models/*.h5 — NO ignorar: se versiona con LFS

@@ -24,17 +24,29 @@ class Settings(BaseSettings):
     DATABASE_ECHO: bool = False
 
     # === SECURITY ===
+    # ⚠️ En producción SECRET_KEY DEBE setearse desde .env.
+    # Si queda en el default aleatorio, cada reinicio del contenedor invalida
+    # todos los JWT existentes (los usuarios pierden sesión).
     SECRET_KEY: str = secrets.token_urlsafe(32)
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # === CORS ===
-    BACKEND_CORS_ORIGINS: List[str] = [
-        "http://localhost:3000",
-        "http://localhost:8080",
-        "http://localhost:9000",
-    ]
+    # String separado por comas (pydantic-settings no parsea List[str] desde
+    # un valor que no sea JSON). Acceder vía `cors_origins_list`.
+    #   BACKEND_CORS_ORIGINS=https://lidis.usbcali.edu.co,http://localhost:9000
+    BACKEND_CORS_ORIGINS: str = (
+        "http://localhost:3000,http://localhost:8080,http://localhost:9000"
+    )
+
+    @property
+    def cors_origins_list(self) -> List[str]:
+        return [
+            origin.strip()
+            for origin in self.BACKEND_CORS_ORIGINS.split(",")
+            if origin.strip()
+        ]
 
     # === OpenAI ===
     OPENAI_API_KEY: str = ""

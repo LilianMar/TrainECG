@@ -6,7 +6,10 @@ __pycache__/
 .env
 .env.*
 logs/
-uploads/
+# Uploads de runtime se excluyen, pero las imágenes de práctica deben ir en la imagen
+uploads/*
+!uploads/practice_ecgs/
+!uploads/practice_ecgs/**
 train/
 docs/
 tests/

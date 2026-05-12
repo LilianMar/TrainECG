@@ -48,6 +48,23 @@ def load_chatbot_corpus():
         logger.warning(f"Chatbot corpus not available: {str(e)}")
 
 
+def _warn_insecure_defaults() -> None:
+    """Avisa si configuraciones críticas quedaron en el default inseguro."""
+    if settings.ENVIRONMENT.lower() == "production":
+        import os
+        if not os.environ.get("SECRET_KEY"):
+            logger.warning(
+                "SECRET_KEY no fue definido en el ambiente: se está usando un valor "
+                "aleatorio generado al iniciar. Los JWT se invalidarán en cada "
+                "reinicio. Define SECRET_KEY en .env para producción."
+            )
+        if not settings.OPENAI_API_KEY:
+            logger.warning(
+                "OPENAI_API_KEY no configurado: las explicaciones del clasificador "
+                "y recomendaciones usarán textos de respaldo (sin IA generativa)."
+            )
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
@@ -56,15 +73,16 @@ async def lifespan(app: FastAPI):
     """
     # Startup
     logger.info("Starting ECG Insight Mentor API...")
+    _warn_insecure_defaults()
     ensure_logs_directory()
     ensure_upload_directory()
     create_tables()
     load_ml_model()
     load_chatbot_corpus()
     logger.info("Application started successfully")
-    
+
     yield
-    
+
     # Shutdown
     logger.info("Shutting down ECG Insight Mentor API...")
     logger.info("Application shut down successfully")
@@ -77,13 +95,16 @@ def create_app() -> FastAPI:
     Returns:
         Configured FastAPI application instance
     """
+    # En producción ocultamos /docs y /redoc; /openapi.json se conserva
+    # porque lo usa el healthcheck del docker-compose.
+    is_prod = settings.ENVIRONMENT.lower() == "production"
     app = FastAPI(
         title=settings.API_TITLE,
         description=settings.API_DESCRIPTION,
         version=settings.API_VERSION,
         lifespan=lifespan,
-        docs_url="/docs",
-        redoc_url="/redoc",
+        docs_url=None if is_prod else "/docs",
+        redoc_url=None if is_prod else "/redoc",
         openapi_url="/openapi.json",
     )
 

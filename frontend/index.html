@@ -20,6 +20,9 @@
 
   <body>
     <div id="root"></div>
+    <!-- Configuración inyectada en runtime por nginx (docker-entrypoint).
+         Cargar ANTES del bundle para que window.RUNTIME_CONFIG esté disponible. -->
+    <script src="/runtime-config.js"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

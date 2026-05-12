@@ -8,8 +8,26 @@ type ApiRequestOptions = {
   token?: string | null;
 };
 
-const getApiBaseUrl = () => {
-  return import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+/**
+ * Resuelve la URL base del API en este orden:
+ *   1) window.RUNTIME_CONFIG.apiUrl  ← inyectado por nginx al arrancar el contenedor
+ *   2) import.meta.env.VITE_API_URL  ← horneado al hacer `vite build`
+ *   3) ""                            ← mismo origen (reverse proxy)
+ *
+ * El paso (1) permite cambiar la URL del backend SIN reconstruir la imagen.
+ */
+declare global {
+  interface Window {
+    RUNTIME_CONFIG?: { apiUrl?: string };
+  }
+}
+
+export const getApiBaseUrl = (): string => {
+  if (typeof window !== "undefined") {
+    const runtime = window.RUNTIME_CONFIG?.apiUrl;
+    if (typeof runtime === "string") return runtime;
+  }
+  return import.meta.env.VITE_API_URL ?? "";
 };
 
 const getErrorMessage = async (response: Response) => {
@@ -62,7 +80,7 @@ export const apiRequest = async <T>(
       window.location.href = "/login";
       throw new Error("Sesión expirada. Por favor, inicia sesión nuevamente.");
     }
-    
+
     const message = await getErrorMessage(response);
     throw new Error(message);
   }
