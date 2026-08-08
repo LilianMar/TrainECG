@@ -59,3 +59,7 @@ build/
 # Temporary files
 *.tmp
 *~
+
+# Metadatos de macOS (los "._" cuelan por la negacion de practice_ecgs)
+._*
+.DS_Store

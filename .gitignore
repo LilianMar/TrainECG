@@ -83,3 +83,14 @@ test/data/dataset_from_questions/
 USB_template/
 Backend/scripts/2D ECG grayscale images/
 Backend/scripts/IA-env
+
+# Metadatos de macOS generados al usar discos externos (exFAT/FAT)
+._*
+.DS_Store
+.AppleDouble
+.Spotlight-V100
+.Trashes
+
+# Archivos temporales de SQLite (WAL/shared-memory)
+*.db-shm
+*.db-wal
